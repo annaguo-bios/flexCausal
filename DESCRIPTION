@@ -1,17 +1,27 @@
 Package: ADMGtmle
-Title: What the Package Does (One Line, Title Case)
+Title: An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables
 Version: 0.0.0.9000
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1.9000
 Imports:
     itertools,
     dplyr,
     SuperLearner,
-    densratio
+    densratio,
+    MASS,
+    utils,
+    mvtnorm,
+    np
+Depends: 
+    R (>= 2.10)
+LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

@@ -1,5 +1,67 @@
-NPS.TMLE.a <- function(a,data,vertices, di_edges, bi_edges, treatment, outcome,
-                     onestep=T, 
+## Provide onestep and TMLE estimators under nonparametrically saturated model ====
+#' Estimate average counterfactual outcome E(Y(a)).
+#'
+#' Function for estimating the average counterfactual outcome E(Y(a)) under a nonparametrically saturated model.
+#' @param a Treatment level at which the average counterfactual outcome is computed
+#' @param data A Dataframe contains all the variables listed in vertices parameter
+#' @param vertices A vector of variable names in the causal graph
+#' @param di_edges A list of directed edges in the causal graph. For example, `di_edges=list(c('A','B'))` means there is a directed edge from vertex A to B.
+#' @param bi_edges A list of bidirected edges in the causal graph. For example, `bi_edges=list(c('A','B'))` means there is a bidirected edge between vertex A and B.
+#' @param multivariate.variables A list of variables that are multivariate in the causal graph. For example, `multivariate.variables=list(M=c('M1,'M2'))` means M is bivariate and the corresponding columns in the dataframe are M1 and M2.
+#' @param treatment A character string indicating the treatment variable
+#' @param outcome A character string indicating the outcome variable
+#' @param superlearner.seq A logical indicator determines whether SuperLearner via the \link[SuperLearner]{SuperLearner} function is adopted when performing sequential regression to estimate the conditional expectations as the nuisances consititute the efficient influence function.
+#' @param superlearner.Y A logical indicator determines whether SuperLearner via the \link[SuperLearner]{SuperLearner} function is adopted for estimating the outcome regression.
+#' @param superlearner.A A logical indicator determines whether SuperLearner via the \link[SuperLearner]{SuperLearner} function is adopted for estimating the propensity score.
+#' @param superlearner.M A logical indicator determines whether SuperLearner via the \link[SuperLearner]{SuperLearner} function is adopted for estimating the density ratio for variables in set M when `ratio.method.M="bayes"`.
+#' @param superlearner.L A logical indicator determines whether SuperLearner via the \link[SuperLearner]{SuperLearner} function is adopted for estimating the density ratio for variables in set L when `ratio.method.L="bayes"`.
+#' @param crossfit A logical indicator determines whether crossfitting is adopted for SuperLearner. If crossfit is set to TRUE, the data is split into K folds as specified by the `K` parameter.
+#' @param K An integer specifying the number of folds for crossfitting.
+#' @param ratio.method.L A character string indicating the method used to estimate the density ratio associated with L.
+#' The default is 'bayes'. The "bayes" method estimates the density ratio \eqn{p(L|...,A=a0)/p(L|...,A=a1)} by rewriting it as \eqn{(p(a0|L,...)/p(a1|L,...))/(p(a0|...)/p(a1|...))}.
+#' Here \eqn{p(a0|L,...)} and \eqn{p(a0|...)} are estimated via linear regression if `superlearner.L=F` and via superlearner if `superlearner.L=T`.
+#' @param ratio.method.M A character string indicating the method used to estimate the density ratio associated with M.
+#' The default is 'bayes'. The "bayes" method estimates the density ratio \eqn{p(M|...,A=a0)/p(M|...,A=a1)} by rewriting it as \eqn{(p(a0|M,...)/p(a1|M,...))/(p(a0|...)/p(a1|...))}.
+#' Here \eqn{p(a0|M,...)} and \eqn{p(a0|...)} are estimated via linear regression if `superlearner.M=F` and via superlearner if `superlearner.M=T`.
+#' @param lib.seq A character vector specifying the library of algorithms to be used in the SuperLearner for sequential regression.
+#' @param lib.L A character vector specifying the library of algorithms to be used in the SuperLearner for estimating the density ratio associated with L.
+#' @param lib.M A character vector specifying the library of algorithms to be used in the SuperLearner for estimating the density ratio associated with M.
+#' @param lib.Y A character vector specifying the library of algorithms to be used in the SuperLearner for outcome regression.
+#' @param lib.A A character vector specifying the library of algorithms to be used in the SuperLearner for propensity score estimation.
+#' @param formulaY Regression formula for the outcome regression of Y on it's Markov pillow. The default is 'Y ~ .'.
+#' @param formulaA Regression formula for the propensity score regression of A on it's Markov pillow. The default is 'A ~ .'.
+#' @param linkY_binary The link function used for outcome regression of Y on it's Markov pillow when Y is binary and superlearner is not sued. The default is the 'logit' link.
+#' @param linkA The link function used for propensity score regression of A on it's Markov pillow if superlearner is not used. The default is the 'logit' link.
+#' @param cvg.criteria A numerical value representing the convergence criteria for the iterative update of the nusiances in TMLE.
+#' If the absolute of the mean of efficient influence function is less than cvg.criteria, the iterative update stops. The default value is 0.01.
+#' @param n.iter The maximum number of iterations for the iterative update of the nuisances in TMLE. The default value is 500.
+#' @param truncate_lower The lower bound for truncation of the propensity score. The default is 0, which means no truncation.
+#' @param truncate_upper The upper bound for truncation of the propensity score. The default is 1, which means no truncation.
+#' @return Function outputs a list containing TMLE results and onestep results:
+#' \describe{
+#'       \item{\code{estimated_psi}}{The estimated parameter of interest: \eqn{E(Y^a)}}
+#'       \item{\code{lower.ci}}{Lower bound of the 95% confidence interval for \code{estimated_psi}}
+#'       \item{\code{upper.ci}}{Upper bound of the 95 pct confidence interval for \code{estimated_psi}}
+#'       \item{\code{EIF}}{The estimated efficient influence function evaluated at the observed data}
+#'       \item{\code{EIF.Y}}{The part of the EIF corresponding to the outcome regression}
+#'       \item{\code{EIF.A}}{The part of EIF corresponding to the propensity score regression}
+#'       \item{\code{EIF.v}}{The part of EIF corresponding to variables that between treatment and outcome according to the topological order of vertices in the graph.}
+#'       \item{\code{p.a1.mpA}}{The estimated propensity score for treatment level 1-a given the Markov pillow of A}
+#'       \item{\code{mu.next.A}}{Estimated \eqn{E[v|mp(v)]} for v that comes right after A in topological order}
+#'       \item{\code{EDstar}}{The sample mean of the estimated efficient influence function. If convergence is achieved, this should be close to 0 for TMLE estimators.}
+#'.      \item{\code{EDstar.record}}{A vector recording the value of EDstar over iterations.}
+#'       \item{\code{iter}}{Number of iterations where convergence is achieved for the iterative update of the mediator density and propensity score.}}
+#' @examples
+#' # E(Y(1)) estimation.
+#' NPS.TMLE.a(a=1,data=data_fig_4a, vertices=c('A','M','L','Y','X'),
+#' bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','M'),
+#' c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
+#' treatment='A', outcome='Y', multivariate.variables = list(M=c('M1','M2')))
+#' @import dplyr MASS densratio SuperLearner mvtnorm stats itertools utils
+#' @export
+#'
+#'
+NPS.TMLE.a <- function(a,data,vertices, di_edges, bi_edges, treatment, outcome, multivariate.variables=NULL,
                      superlearner.seq = F, # whether run superlearner for sequential regression
                      superlearner.Y=F, # whether run superlearner for outcome regression
                      superlearner.A=F, # whether run superlearner for propensity score
@@ -17,61 +79,983 @@ NPS.TMLE.a <- function(a,data,vertices, di_edges, bi_edges, treatment, outcome,
                      linkY_binary="logit", linkA="logit", # link function for outcome regression and propensity score if superlearner is not used
                      n.iter=500, cvg.criteria=0.01,
                      truncate_lower=0, truncate_upper=1){
-  
+
   # attach(data, warn.conflicts=FALSE)
-  
+
   n <- nrow(data)
-  
+
   a0 <- a
   a1 <- 1-a
-  
+
+  # make a graph object
+  graph <- make.graph(vertices=vertices, bi_edges=bi_edges, di_edges=di_edges)
+  vertices <- graph$vertices
+  di_edges <- graph$di_edges
+  bi_edges <- graph$bi_edges
+
   # return topological ordering
-  tau <- top_order(vertices, di_edges, bi_edges)
+  tau <- f.top_order(graph, treatment)
   tau.df <- data.frame(tau=tau, order = 1:length(tau))
-  
+
   # Get set C, M, L
-  setCML <- CML(vertices, di_edges, bi_edges, treatment) # get set C, M, L
-  rm(order) # this function from python is required for running the top_order but it contradicts with order in R, so remove it
-  
-  C <- setCML$C # everything comes before the treatment following topolofical order tau
-  
-  L <- setCML$L # variables within the district of treatment and comes after the treatment (including the treatment itself) following topolofical order tau
-  
+  setCML <- CML(graph, treatment) # get set C, M, L
+
+  C <- setCML$C # everything comes before the treatment following topological order tau
+
+  L <- setCML$L # variables within the district of treatment and comes after the treatment (including the treatment itself) following topological order tau
+
   M <- setCML$M # everything else
-  
+
   # re-order vertices according to their topological order in tau
-  
+
   C <- rerank(C, tau) # re-order vertices in C according to their topological order in tau
-  
+
   L <- rerank(L, tau) # re-order vertices in L according to their topological order in tau
   L.removedA <- L[L!=treatment] # remove treatment from L
-  
+
   M <- rerank(M, tau) # re-order vertices in M according to their topological order in tau
-  
+
   # Variables
   A <- data[,treatment] # treatment
   Y <- data[,outcome] # outcome
-  
-  
-  ##################################################################
-  ## TMLE initialization for sequential regression based estimator
-  ##################################################################
-  
-  source("NPS-01-initial-nuisance-estimate.R")
-  
-  ##################################################################
-  #################### One-step estimator ##########################
-  ##################################################################
 
-  source("NPS-02-onestep-estimator.R")
-  
-  ##################################################################
-  #################### Sequential regression based TMLE ############
-  ##################################################################
-  
-  source("NPS-03-tmle-estimator.R")
-  
-  return(list(TMLE=tmle.out,Onestep=onestep.out))
-  
+
+  #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////#
+  ##///////////////////////////// STEP1: TMLE initialization for sequential regression based estimator///////////////////////##
+  #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////#
+
+  ################################################
+  ############### OUTCOME REGRESSION #############
+  ################################################
+
+  #### Fit nuisance models ####
+
+  # Find Markov pillow of outcome
+  mpY <- f.markov_pillow(graph, node=outcome, treatment=treatment) # Markov pillow for outcome
+  mpY <- replace.vector(mpY, multivariate.variables) # replace vertices with it's components if vertices are multivariate
+
+  # prepare dataset for regression and prediction
+  dat_mpY <- data[,mpY] # extract data for Markov pillow for outcome
+  dat_mpY.a0 <- dat_mpY %>% mutate(!!treatment := a0) # set treatment to a0
+  dat_mpY.a1 <- dat_mpY %>% mutate(!!treatment := a1) # set treatment to a1
+
+  if (crossfit==T){ #### cross fitting + super learner #####
+
+    fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
+
+    or_fit <- CV.SuperLearner(Y=Y, X=dat_mpY, family = fit.family, V = K, SL.library = lib.Y, control = list(saveFitLibrary=T),saveAll = T)
+
+    mu.Y_a1 <- unlist(lapply(1:K, function(x) predict(or_fit$AllSL[[x]], newdata=dat_mpY.a1[or_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) or_fit$folds[[x]])))]
+    mu.Y_a0 <- unlist(lapply(1:K, function(x) predict(or_fit$AllSL[[x]], newdata=dat_mpY.a0[or_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) or_fit$folds[[x]])))]
+
+
+  } else if (superlearner.Y==T){ #### super learner #####
+
+    fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
+
+    or_fit <- SuperLearner(Y=Y, X=dat_mpY, family = fit.family, SL.library = lib.Y)
+
+    mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1)[[1]] %>% as.vector()
+    mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0)[[1]] %>% as.vector()
+
+  } else { #### simple linear regression with user input regression formula: default="Y ~ ." ####
+
+    fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
+
+    or_fit <- glm(as.formula(formulaY), data=dat_mpY, family = fit.family)
+
+    mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1)
+    mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0)
+
+
+  }
+
+
+  ################################################
+  ############### PROPENSITY SCORE ###############
+  ################################################
+
+  #### Fit nuisance models ####
+
+  # Find Markov pillow of treatment
+  mpA <- f.markov_pillow(graph, node=treatment, treatment=treatment) # Markov pillow for treatment
+  mpA <- replace.vector(mpA, multivariate.variables) # replace vertices with it's components if vertices are multivariate
+
+  # if mpA is an empty set, then we just get the propensity score as the mean of the treatment
+  if (length(mpA)==0){
+    p.A1.mpA <- rep(mean(A==1), nrow(data))
+
+  }else{
+
+    # prepare dataset for regression and prediction
+    dat_mpA <- data[,mpA, drop = F] # extract data for Markov pillow for outcome
+
+    if (crossfit==T){ #### cross fitting + super learner #####
+
+      # fit model
+      ps_fit <- CV.SuperLearner(Y=A, X=dat_mpA, family = binomial(), V = K, SL.library = lib.A, control = list(saveFitLibrary=T),saveAll = T)
+
+      # make prediction: p(A=1|mp(A))
+      p.A1.mpA <- ps_fit$SL.predict
+
+    } else if (superlearner.A==T){ #### super learner #####
+
+      # fit model
+      ps_fit <- SuperLearner(Y=A, X=dat_mpA, family = binomial(), SL.library = lib.A)
+
+      # make prediction: p(A=1|mp(A))
+      p.A1.mpA <- predict(ps_fit, type = "response")[[1]] %>% as.vector()
+
+    } else { #### simple linear regression with user input regression formula: default="A ~ ." ####
+
+      if (truncate_lower!=0 | truncate_upper!=1){ # under weak overlapping issue, it's more stable to run A~X via linear regression
+
+        # fit model
+        ps_fit <- lm(as.formula(formulaA), data=dat_mpA)
+
+        # make prediction: p(A=1|mp(A))
+        p.A1.mpA <- predict(ps_fit)
+
+      } else { # without weak overlapping issue. Run A~X via logistic regression
+
+        # fit model
+        ps_fit <- glm(as.formula(formulaA), data=dat_mpA,  family = binomial())
+
+        # make prediction: p(A=1|mp(A))
+        p.A1.mpA <- predict(ps_fit, type = "response")  # p(A=1|X)
+
+      }
+    }
+
+  } # end of if (length(mpA)==0)
+
+  # apply truncation to propensity score to deal with weak overlap.
+  # truncated propensity score within the user specified range of [truncate_lower, truncate_upper]: default=[0,1]
+  p.A1.mpA[p.A1.mpA < truncate_lower] <- truncate_lower
+  p.A1.mpA[p.A1.mpA > truncate_upper] <- truncate_upper
+
+  p.a1.mpA <- a1*p.A1.mpA + (1-a1)*(1-p.A1.mpA) # p(A=a1|mp(A))
+
+  assign("densratio_A", (1-p.a1.mpA)/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+
+
+
+
+  ################################################
+  ############### DENSITY RATIO.   ###############
+  ################################################
+
+  ###### DENSITY RATIO ASSOCIATED WITH L ######
+
+  if (ratio.method.L=="densratio"){ ################### METHOD 2A: densratio method  ###################
+
+    # Error3: densratio method doesn't support factor variables
+
+
+    if (!all(sapply(replace.vector(c(L.removedA, f.markov_pillow(graph, L.removedA)), multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
+
+      print("Error in estimating density ratios associated with variables in L: densratio method only support numeric/integer variables, try bayes method instead.")
+
+      stop() }
+
+
+    # if M,A,X only consists numeric/integer variables: apply density ratio estimation
+    for (v in L.removedA){ ## Iterate over each variable in L\A
+
+      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a0
+      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a1
+
+      densratio.v <- densratio(dat_v.a0, dat_v.a1)
+
+      ratio <- densratio.v$compute_density_ratio(data[,replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)]) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
+
+      assign(paste0("densratio_",v), ratio)
+    }
+
+
+
+  } else if (ratio.method.L=="bayes"){ ################### METHOD 2B: Bayes method ###################
+
+    for (v in L.removedA){ ## Iterate over each variable in L\A
+
+      #### Prepare data for regression and prediction ####
+      dat_bayes.v <- data[,setdiff( replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
+
+      #### Fit nuisance models ####
+
+      if (crossfit==T){
+
+        bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- bayes_fit$SL.predict
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+
+        # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
+        # such that we can come back to update the density ratio of v once we update the densratioA
+        assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
+
+      }else if (superlearner.L==T){
+
+        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+
+        # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
+        # such that we can come back to update the density ratio of v once we update the densratioA
+        assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
+
+      } else {
+
+        # estimate density ratio using bayes rule
+        bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bays_fit, type = "response")
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+
+        # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
+        # such that we can come back to update the density ratio of v once we update the densratioA
+        assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
+
+      }
+
+
+    } ## Iterate over each variable in L\A
+
+
+  } else {
+
+    print("Invalid ratio.method.L input.")
+
+  }
+
+  # Get all the densratio vectors based on their names
+  densratio.vectors.L <- mget(c(paste0("densratio_",L.removedA),"densratio_A"))
+
+  # Create a data frame using all the vectors
+  densratio.L <- data.frame(densratio.vectors.L)
+
+  ###### DENSITY RATIO ASSOCIATED WITH M ######
+
+
+  # Find vertices in set M, that the Markov pillow of which include A and don't include A
+  # For the vertices whose Markov pillow include A, we will use either the "densratio" or "bayes" method to estimate the density ratio p(M|mp(M))|_{a0}/p(M|mp(M))|_{a1}
+  # For the vertices whose Markov pillow don't include A, density ratio p(M|mp(M))|_{a0}/p(M|mp(M))|_{a1} is 1
+
+  M.mpM.includeA <- c()
+  M.mpM.excludeA <- c()
+
+  for (v in M){ ## Iterate over each variable in M
+
+    if (treatment %in% f.markov_pillow(graph, v)){ # vertices whose Markov pillow include A
+      M.mpM.includeA <- c(M.mpM.includeA, v)
+
+    } else { # vertices whose Markov pillow don't include A
+
+      M.mpM.excludeA <- c(M.mpM.excludeA, v)
+
+    }
+
+  } ## Iterate over each variable in M
+
+  # assign ratio=1 for vertices in M.mpM.excludeA
+  for (m in M.mpM.excludeA) { assign(paste("densratio_", m), 1) }
+
+  if (ratio.method.M=="densratio"){ ################### METHOD 2A: densratio method  ###################
+
+    # Error: densratio method doesn't support factor variables
+
+    if (!all(sapply(replace.vector(c(M.mpM.includeA, f.markov_pillow(graph, M.mpM.includeA), multivariate.variables)), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
+
+      print("Error in estimating density ratios associated with variables in M: densratio method only support numeric/integer variables, try bayes method instead.")
+
+      stop() }
+
+
+    # if M and mpi(M) only consists numeric/integer variables: apply density ratio estimation
+    for (v in M.mpM.includeA){
+
+      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a0
+      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a1
+
+      densratio.v <- densratio(dat_v.a0, dat_v.a1)
+
+      ratio <- densratio.v$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)]) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
+
+      assign(paste0("densratio_",v), ratio)
+    }
+
+
+  } else if (ratio.method.M=="bayes"){ ################### METHOD 2B: Bayes method ###################
+
+    for (v in M.mpM.includeA){ ## Iterate over each variable in M
+
+      #### Prepare data for regression and prediction ####
+      dat_bayes.v <- data[,setdiff(replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
+
+      #### Fit nuisance models ####
+
+      if (crossfit==T){
+
+        # fit p(A|mp(v)\A,v)
+        bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- bayes_fit$SL.predict
+
+        #p(A=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(A=a1|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+
+        # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
+        # such that we can come back to update the density ratio of v once we update the densratioA
+        assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
+
+      }else if (superlearner.M==T){
+
+        # fit p(A|mp(v)\A,v)
+        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
+
+        #p(A=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(A=a1|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+
+        # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
+        # such that we can come back to update the density ratio of v once we update the densratioA
+        assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
+
+      } else {
+
+        # estimate density ratio using bayes rule
+        bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+
+        # p(A=1|mp(v)\A,v)
+        p.a1.mpv <- predict(bays_fit, type = "response")
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.a1.mpv+(1-a0)*(1-p.a1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+
+        # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
+        # such that we can come back to update the density ratio of v once we update the densratioA
+        assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
+
+      }
+
+
+    } ## Iterate over each variable in M
+
+
+  } else {
+
+    print("Invalid ratio.method.M input.")
+
+    stop()
+
+  }
+
+  # Get the densratio vectors based on their names
+  densratio.vectors.M <- mget(paste0("densratio_",M))
+
+  # Create a data frame using all the vectors
+  densratio.M <- data.frame(densratio.vectors.M)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////#
+  #/////////////////////////////////////////// STEP2: One-step estimator /////////////////////////////////////////////////////#
+  #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////#
+
+  ############################################################
+  ## SEQUENTIAL REGRESSION FOR ESETIMATING mu(Z_i, a_{Z_i})
+  ############################################################
+
+  # the sequential regression will be perform for v that locates between A and Y accroding to topological order tau
+  vertices.between.AY <- tau[{which(tau==treatment)+1}:{which(tau==outcome)-1}]
+
+  # sequential regression
+  for (v in rev(vertices.between.AY)){ ## iterate through vertices between A and Y according to topological order tau
+
+    # perform sequential regressions for v with larger order first: rev()
+
+    ### Prepare Markov pillow and dataset for regression and prediction ####
+
+    # Find Markov pillow of v
+    mpv <- f.markov_pillow(graph, v) # Markov pillow for outcome
+    mpv <- replace.vector(mpv, multivariate.variables) # replace vertices with it's components if vertices are multivariate
+
+    # prepare dataset for regression and prediction
+    dat_mpv <- data[,mpv] # extract data for Markov pillow for v
+
+    if (treatment %in% mpv){ # we only need to consider evaluate regression at specific level of A if treatment is in Markov pillow for v
+
+      # set treatment to a0
+      dat_mpv.a0 <- dat_mpv %>% mutate(!!treatment := a0)
+
+      # set treatment to a1
+      dat_mpv.a1 <- dat_mpv %>% mutate(!!treatment := a1) }
+
+    # vertex that right after Z according to tau
+    next.v <- tau.df$tau[tau.df$order=={tau.df$order[tau.df$tau==v]+1}]
+
+    next.mu <- if(next.v %in% L){ get(paste0("mu.",next.v,"_a1")) }else{ get(paste0("mu.",next.v,"_a0")) } # mu is evaluated at a0 for next.v in M and at a1 for next.v in L
+
+    next.mu.transform <- if(all(Y %in% c(0,1))){qlogis(next.mu)}else{next.mu} # if Y is binary, logit transform the sequential regression first
+
+    ### End of preparation ####
+
+    if (crossfit==T){ #### cross fitting + super learner #####
+
+      v_fit <- CV.SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), V = K, SL.library = lib.seq, control = list(saveFitLibrary=T), saveAll = T)
+
+
+      ######## prediction: A in mp(v) vs A NOT in mp(v) ########
+      if (treatment %in% mpv){
+
+        reg_a1 <- unlist(lapply(1:K, function(x) predict(v_fit$AllSL[[x]], newdata=dat_mpv.a1[v_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) v_fit$folds[[x]])))]
+        reg_a0 <- unlist(lapply(1:K, function(x) predict(v_fit$AllSL[[x]], newdata=dat_mpv.a0[v_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) v_fit$folds[[x]])))]
+
+        # assign prediction as mu.v_a1 and mu.v_a0
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(reg_a1)}else{reg_a1}) # transform back to probability scale if Y is binary
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(reg_a0)}else{reg_a0}) # transform back to probability scale if Y is binary
+
+      }else{
+
+        # assign prediction as mu.v_a1 and mu.v_a0, where mu.v_a1 = mu.v_a0 = mu.v
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(v_fit$SL.predict)}else{v_fit$SL.predict}) # transform back to probability scale if Y is binary
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(v_fit$SL.predict)}else{v_fit$SL.predict}) # transform back to probability scale if Y is binary
+
+      }
+
+      #########################################################
+
+
+    } else if (superlearner.seq==T){ #### super learner #####
+
+      v_fit <- SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), SL.library = lib.seq)
+
+      ######## prediction: A in mp(v) vs A NOT in mp(v) ########
+      if (treatment %in% mpv){
+
+        reg_a1 <- predict(v_fit, newdata=dat_mpv.a1)[[1]] %>% as.vector()
+        reg_a0 <- predict(v_fit, newdata=dat_mpv.a0)[[1]] %>% as.vector()
+
+        # assign prediction as mu.v_a1 and mu.v_a0
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(reg_a1)}else{reg_a1}) # transform back to probability scale if Y is binary
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(reg_a0)}else{reg_a0}) # transform back to probability scale if Y is binary)
+
+      }else{
+
+        # assign prediction as mu.v_a1 and mu.v_a0, where mu.v_a1 = mu.v_a0 = mu.v
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(predict(v_fit)[[1]] %>% as.vector())}else{predict(v_fit)[[1]] %>% as.vector()}) # transform back to probability scale if Y is binary
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(predict(v_fit)[[1]] %>% as.vector())}else{predict(v_fit)[[1]] %>% as.vector()}) # transform back to probability scale if Y is binary
+
+      }
+      #########################################################
+
+
+
+    }else { #### linear regression #####
+
+      v_fit <- lm(next.mu.transform ~ ., data=dat_mpv) # fit linear regression/ logistic regression depending on type of v
+
+      ######## prediction: A in mp(v) vs A NOT in mp(v)########
+      if (treatment %in% mpv){
+
+        reg_a1 <- predict(v_fit, newdata=dat_mpv.a1)
+        reg_a0 <- predict(v_fit, newdata=dat_mpv.a0)
+
+        # assign prediction as mu.v_a1 and mu.v_a0
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(reg_a1)}else{reg_a1}) # transform back to probability scale if Y is binary
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(reg_a0)}else{reg_a0}) # transform back to probability scale if Y is binary
+
+      }else{
+
+        # assign prediction as mu.v_a1 and mu.v_a0, where mu.v_a1 = mu.v_a0 = mu.v
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(predict(v_fit))}else{predict(v_fit)}) # transform back to probability scale if Y is binary
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(predict(v_fit))}else{predict(v_fit)}) # transform back to probability scale if Y is binary
+
+      }
+      ##########################################################
+    }
+
+  }  ## End of iteration over all vertics between A and Y
+
+  ############################################################
+  ## END OF SEQUENTIAL REGRESSION FOR ESETIMATING mu(Z_i, a_{Z_i})
+  ############################################################
+
+  ######################
+  # EIF calculations
+  ######################
+
+  ## EIF for Y|mp(Y):
+  #if Y in L: I(A=a1)*I(M < Y){p(M|mp(M))|_{a0}/p(M|mp(M))|_{a1}}*(Y-E(Y|mp(Y))|_{a1})
+  #if Y in M: I(A=a0)*I(L < Y){p(L|mp(L))|_{a0}/p(:|mp(L))|_{a1}}*(Y-E(Y|mp(Y))|_{a0})
+
+  f.M_preY <- Reduce(`*`, densratio.M) # Mi precede Y = the set M
+  f.L_preY <- Reduce(`*`, densratio.L) # Li precede Y = the set L
+
+
+  EIF.Y <- if(outcome %in% L){
+
+    (A==a1)*f.M_preY*(Y-mu.Y_a1)}else{ # if Y in L
+
+      (A==a0)*1/f.L_preY*(Y-mu.Y_a0)} # if Y in M
+
+  ## EIF for Z|mp(Z)
+
+  for (v in rev(vertices.between.AY)){ ## iterate over all vertices between A and Y
+
+    # select M and L that precede v
+    selected.M <- M[sapply(M, function(m) tau.df$order[tau.df$tau==m] < tau.df$order[tau.df$tau==v])] # M precedes Z
+    selected.L <- L[sapply(L, function(l) tau.df$order[tau.df$tau==l] < tau.df$order[tau.df$tau==v])] # L precedes Z
+
+    # vertex that right after v according to tau
+    next.v <- tau.df$tau[tau.df$order=={tau.df$order[tau.df$tau==v]+1}]
+
+    # mu(next.v, a_{next.v})
+    next.mu <- if(next.v %in% L){ get(paste0("mu.",next.v,"_a1"))}else{get(paste0("mu.",next.v,"_a0"))}
+
+    EIF.v <- if(v %in% L){ # v in L
+
+      # product of the selected variables density ratio
+      f.M_prev <- Reduce(`*`, densratio.M[,paste0("densratio_",selected.M), drop=F]) # Mi precede v
+
+      # EIF for v|mp(v)
+      (A==a1)*f.M_prev*( next.mu - get(paste0("mu.",v,"_a1")) )
+
+    }else{ # v in M
+
+      # product of the selected variables density ratio
+      f.L_prev <- Reduce(`*`, densratio.L[,paste0("densratio_",selected.L), drop=F]) # Li precede v
+
+      # EIF for v|mp(v)
+      (A==a0)*1/f.L_prev*( next.mu - get(paste0("mu.",v,"_a0")) )
+    }
+
+    assign(paste0("EIF.",v), EIF.v)
+
+  } ## End of iteration over all vertices between A and Y
+
+  ## EIF for A=a1|mp(A)
+
+  # vertex that right after A according to tau
+  next.A <- tau.df$tau[tau.df$order=={tau.df$order[tau.df$tau==treatment]+1}]
+
+  EIF.A <- {(A==a1) - p.a1.mpA}*get(paste0("mu.",next.A,"_a0"))
+
+
+  ######################
+  # estimate E[Y(a)]
+  ######################
+
+  # estimated psi
+  estimated_psi = mean( EIF.Y + rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))) +  EIF.A + p.a1.mpA*get(paste0("mu.",next.A,"_a0")) + (A==a0)*Y )
+
+  # EIF
+  EIF <- EIF.Y + # EIF of Y|mp(Y)
+    rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))) + # EIF of v|mp(v) for v between A and Y
+    EIF.A + # EIF of A|mp(A)
+    p.a1.mpA*get(paste0("mu.",next.A,"_a0")) + # EIF of mp(A)
+    mean((A==a0)*Y) -
+    estimated_psi
+
+
+  # confidence interval
+  lower.ci <- estimated_psi-1.96*sqrt(mean(EIF^2)/nrow(data))
+  upper.ci <- estimated_psi+1.96*sqrt(mean(EIF^2)/nrow(data))
+
+
+  onestep.out <- list(estimated_psi=estimated_psi, # estimated parameter
+                      lower.ci=lower.ci, # lower bound of 95% CI
+                      upper.ci=upper.ci, # upper bound of 95% CI
+                      EIF=EIF # E(Dstar) for Y|M,A,X and M|A,X, and A|X
+  )
+
+
+
+
+
+
+
+
+
+  #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////#
+  #/////////////////////////////////////////// STEP2: Sequential regression based TMLE ///////////////////////////////////////#
+  #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////#
+
+  # initialize EDstar: the mean of the EIF for A, Y, and v
+  EDstar <- 10 # random large number
+
+  # record EDstar over iterations
+  EDstar.record <- c()
+
+  # initialize iteration counter
+  iter <- 0
+
+  while(abs(EDstar) > cvg.criteria & iter < n.iter){
+
+
+    ######################
+    # update p(A=a1|mp(A))
+    ######################
+
+    # clever coefficient for propensity score: mu(Z_1,a0)
+    clevercoef.A <- get(paste0("mu.",next.A,"_a0"))
+
+    # derive epsA
+    ps_model <- glm(
+      (A==a1) ~ offset(qlogis(p.a1.mpA))+ clevercoef.A -1, family=binomial(), start=0
+    )
+
+    eps.A <- coef(ps_model)
+
+    # update p(A=a1|mp(A))
+    p.a1.mpA <- plogis(qlogis(p.a1.mpA)+eps.A*(clevercoef.A))
+
+    # update density ratio of A
+    assign("densratio_A", (1-p.a1.mpA)/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+
+    # update density ratio for v in L if the ratio.method.L = "bayes"
+    if (ratio.method.L == "bayes"){ for (v in L.removedA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/densratio_A)} }
+
+    # Update the density ratio data frame for L
+    densratio.vectors.L <- mget(paste0("densratio_",L))
+    densratio.L <- data.frame(densratio.vectors.L)
+
+    # update density ratio for v in M if the ratio.method.M = "bayes"
+    if (ratio.method.M == "bayes"){ for (v in M.mpM.excludeA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/densratio_A)} }
+
+    # Update the density ratio data frame for M
+    densratio.vectors.M <- mget(paste0("densratio_",M))
+    densratio.M <- data.frame(densratio.vectors.M)
+
+
+
+    ######################
+    # update E[Y|mp(Y)]
+    ######################
+
+    # density ratio before Y
+    f.M_preY <- Reduce(`*`, densratio.M) # Mi precede Y = the set M
+    f.L_preY <- Reduce(`*`, densratio.L) # Li precede Y = the set L
+
+    # clever coefficient for outcome regression: E(Y|mp(Y))
+    weight.Y <- if(outcome %in% L){(A==a1)*f.M_preY}else{(A==a0)*1/f.L_preY}
+
+    offset.Y <- if(outcome %in% L){mu.Y_a1}else{mu.Y_a0}
+
+    if (all(Y %in% c(0,1))){ # binary Y
+
+      # one iteration
+      or_model <- glm(
+        Y ~ offset(offset.Y)+weight.Y-1, family=binomial(), start=0
+      )
+
+      eps.Y = coef(or_model)
+
+      # updated outcome regression
+      # E[Y|mp(Y)]|_{a1} is updated if Y in L
+      # E[Y|mp(Y)]|_{a0} is updated if Y in M
+      if(outcome %in% L){mu.Y_a1 <- plogis(qlogis(offset.Y)+eps.Y*weight.Y)}else{mu.Y_a0 <- plogis(qlogis(offset.Y)+eps.Y*weight.Y)}
+
+
+    } else { # continuous Y
+
+      # one iteration
+      or_model <- lm(
+        Y ~ offset(offset.Y)+1, weights = weight.Y
+      )
+
+      eps.Y <- coef(or_model)
+
+      # updated outcome regression
+      # E[Y|mp(Y)]|_{a1} is updated if Y in L
+      # E[Y|mp(Y)]|_{a0} is updated if Y in M
+      if(outcome %in% L){mu.Y_a1 <- offset.Y+eps.Y}else{mu.Y_a0 <- offset.Y+eps.Y}
+    }
+
+    # update EIF of Y
+    EIF.Y <- if(outcome %in% L){(A==a1)*f.M_preY*(Y-mu.Y_a1)}else{(A==a0)*1/f.L_preY*(Y-mu.Y_a0)} # if Y in M
+
+    ######################
+    # update mu(v,a_v)
+    ######################
+
+    for (v in rev(vertices.between.AY)){ ## iterative over the vertices between A and Y to update mu(v,a_v)
+
+      #### Update initial estimate of the sequential regression  ###
+
+      # vertex that right after Z according to tau
+      next.v <- tau.df$tau[tau.df$order=={tau.df$order[tau.df$tau==v]+1}]
+
+      next.mu <- if(next.v %in% L){ get(paste0("mu.",next.v,"_a1"))}else{get(paste0("mu.",next.v,"_a0"))}
+
+      next.mu.transform <- if(all(Y %in% c(0,1))){qlogis(next.mu)}else{next.mu} # if Y is binary, logit transform the sequential regression first
+
+
+      if (crossfit==T){ #### cross fitting + super learner #####
+
+        v_fit <- CV.SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), V = K, SL.library = lib.seq, control = list(saveFitLibrary=T),saveAll = T)
+
+
+        #################### prediction: A in mp(v) vs A NOT in mp(v) ######################
+        if (treatment %in% mpv){
+
+          reg_a1 <- unlist(lapply(1:K, function(x) predict(v_fit$AllSL[[x]], newdata=dat_mpv.a1[v_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) v_fit$folds[[x]])))]
+          reg_a0 <- unlist(lapply(1:K, function(x) predict(v_fit$AllSL[[x]], newdata=dat_mpv.a0[v_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) v_fit$folds[[x]])))]
+
+          # assign prediction as mu.v_a1 and mu.v_a0
+          assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(reg_a1)}else{reg_a1}) # transform back to probability scale if Y is binary
+          assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(reg_a0)}else{reg_a0}) # transform back to probability scale if Y is binary
+
+        }else{
+
+          # assign prediction as mu.v_a1 and mu.v_a0, where mu.v_a1 = mu.v_a0 = mu.v
+          assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(v_fit$SL.predict)}else{v_fit$SL.predict}) # transform back to probability scale if Y is binary
+          assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(v_fit$SL.predict)}else{v_fit$SL.predict}) # transform back to probability scale if Y is binary
+        }
+
+
+
+      } else if (superlearner.seq==T){ #### super learner #####
+
+        v_fit <- SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), SL.library = lib.seq)
+
+
+        #################### prediction: A in mp(v) vs A NOT in mp(v) ######################
+        if (treatment %in% mpv){
+
+          reg_a1 <- predict(v_fit, newdata=dat_mpv.a1)[[1]] %>% as.vector()
+          reg_a0 <- predict(v_fit, newdata=dat_mpv.a0)[[1]] %>% as.vector()
+
+          # assign prediction as mu.v_a1 and mu.v_a0
+          assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(reg_a1)}else{reg_a1}) # transform back to probability scale if Y is binary
+          assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(reg_a0)}else{reg_a0}) # transform back to probability scale if Y is binary)
+
+        }else{
+
+          # assign prediction as mu.v_a1 and mu.v_a0, where mu.v_a1 = mu.v_a0 = mu.v
+          assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(predict(v_fit)[[1]] %>% as.vector())}else{predict(v_fit)[[1]] %>% as.vector()}) # transform back to probability scale if Y is binary
+          assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(predict(v_fit)[[1]] %>% as.vector())}else{predict(v_fit)[[1]] %>% as.vector()}) # transform back to probability scale if Y is binary
+        }
+
+
+
+      }else { #### linear regression #####
+
+        v_fit <- lm(next.mu.transform ~ ., data=dat_mpv) # fit linear regression/ logistic regression depending on type of v
+
+        #################### prediction: A in mp(v) vs A NOT in mp(v) ######################
+        if (treatment %in% mpv){
+
+          reg_a1 <- predict(v_fit, newdata=dat_mpv.a1)
+          reg_a0 <- predict(v_fit, newdata=dat_mpv.a0)
+
+          # assign prediction as mu.v_a1 and mu.v_a0
+          assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(reg_a1)}else{reg_a1}) # transform back to probability scale if Y is binary
+          assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(reg_a0)}else{reg_a0}) # transform back to probability scale if Y is binary
+
+        }else{
+
+          # assign prediction as mu.v_a1 and mu.v_a0, where mu.v_a1 = mu.v_a0 = mu.v
+          assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(predict(v_fit))}else{predict(v_fit)}) # transform back to probability scale if Y is binary
+          assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(predict(v_fit))}else{predict(v_fit)}) # transform back to probability scale if Y is binary
+
+        }
+
+      } ## End of update of initial estimates of mu(v,a_v)
+
+      ##########################################################################################################
+
+
+
+      ## Perform TMLE update for mu(v,a_v)
+
+      # offset
+      if (all(Y %in% c(0,1))){ # L(mu(v)) = mu(next.v)*log(mu(v)(eps.v))+(1-mu(next.v))*log(1-mu(v)(eps.v)), where mu(v)(eps.v)=expit{logit(mu(v))+eps.v*weight}
+
+        offset.v <- if(v %in% L){qlogis(get(paste0("mu.",v,"_a1")))}else{qlogis(get(paste0("mu.",v,"_a0")))}
+
+      }else{ # L(mu(v)) = weight*{mu(next.v)-mu(v)(eps.v)}^2, where mu(v)(eps.v)=mu(v)+eps.v
+
+        offset.v <- if(v %in% L){get(paste0("mu.",v,"_a1"))}else{get(paste0("mu.",v,"_a0"))}}
+
+
+      # weight for regression
+      # select M and L that precede v
+      selected.M <- M[sapply(M, function(m) tau.df$order[tau.df$tau==m] < tau.df$order[tau.df$tau==v])] # M precedes Z
+      selected.L <- L[sapply(L, function(l) tau.df$order[tau.df$tau==l] < tau.df$order[tau.df$tau==v])] # L precedes Z
+
+
+      weight.v <- if(v %in% L){
+        # product of the selected variables density ratio
+        f.M_prev <- Reduce(`*`, densratio.M[,paste0("densratio_",selected.M), drop=F]) # Mi precede Z
+
+        # weight
+        (A==a1)*f.M_prev }else{
+
+          # product of the selected variables density ratio
+          f.L_prev <- Reduce(`*`, densratio.L[,paste0("densratio_",selected.L),drop=F]) # Mi precede Z
+
+          # weight
+          (A==a0)*1/f.L_prev }
+
+
+      # one iteration update
+      if (all(Y %in% c(0,1))){
+        v_model <- glm(next.mu ~ offset(offset.v)+weight.v-1, family=binomial(link="logit")) # fit logistic regression if Y is binary, this is like a generalized logistic regression
+
+      }else{
+        v_model <- lm(next.mu ~ offset(offset.v)+1, weights = weight.v) # fit linear regression if Y is continuous
+      }
+
+      # the optimized submodel index
+      eps.v <- coef(v_model)
+
+      # updated outcome regression
+      # E[Y|mp(Y)]|_{a1} is updated if v in L
+      # E[Y|mp(Y)]|_{a0} is updated if v in M
+      if(v %in% L){
+
+        assign(paste0("mu.",v,"_a1"), if(all(Y %in% c(0,1))){plogis(offset.v+eps.v*weight.v)}else{offset.v+eps.v}) # transform back to probability scale if Y is binary
+
+      }else{
+
+        assign(paste0("mu.",v,"_a0"), if(all(Y %in% c(0,1))){plogis(offset.v+eps.v*weight.v)}else{offset.v+eps.v}) # transform back to probability scale if Y is binary
+
+      }
+
+
+
+
+      EIF.v <- if(v %in% L){ weight.v*( next.mu - get(paste0("mu.",v,"_a1"))) }else{ weight.v*( next.mu - get(paste0("mu.",v,"_a0")))}
+
+      assign(paste0("EIF.",v), EIF.v) # if Y in M
+
+    } ## End of update of mu(v,a_v) and EIF.v
+
+
+    # update EIF for A
+    EIF.A <- ((A==a1) - p.a1.mpA)*get(paste0("mu.",next.A,"_a0"))
+
+    # update stoping criteria
+    EDstar <- mean(EIF.A) + mean(EIF.Y) + mean(rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))))
+
+    # update iteration counter
+    iter <- iter + 1
+
+    # record EDstar
+    EDstar.record <- c(EDstar.record, EDstar)
+
+
+
+  } ## End of while loop
+
+
+
+  ######################
+  # estimate E[Y(a)]
+  ######################
+
+  # estimated psi
+  estimated_psi = mean( EIF.Y + rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))) +  EIF.A + p.a1.mpA*get(paste0("mu.",next.A,"_a0")) + (A==a0)*Y )
+
+  # EIF
+  EIF <- EIF.Y + # EIF of Y|mp(Y)
+    rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))) + # EIF of v|mp(v) for v between A and Y
+    EIF.A + # EIF of A|mp(A)
+    p.a1.mpA*get(paste0("mu.",next.A,"_a0")) + # EIF of mp(A)
+    mean((A==a0)*Y) -
+    estimated_psi
+
+
+  # confidence interval
+  lower.ci <- estimated_psi-1.96*sqrt(mean(EIF^2)/nrow(data))
+  upper.ci <- estimated_psi+1.96*sqrt(mean(EIF^2)/nrow(data))
+
+
+  tmle.out <- list(estimated_psi=estimated_psi, # estimated parameter
+                   lower.ci=lower.ci, # lower bound of 95% CI
+                   upper.ci=upper.ci, # upper bound of 95% CI
+                   EIF=EIF, # EIF
+                   EIF.Y=EIF.Y, # EIF of Y|mp(Y)
+                   EIF.A=EIF.A, # EIF of A|mp(A)
+                   EIF.v = rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))), # EIF of v|mp(v) for v between A and Y
+                   p.a1.mpA = p.a1.mpA, # estimated E[A=a1|mp(A)]
+                   mu.next.A = get(paste0("mu.",next.A,"_a0")), # estimated E[v|mp(v)] for v that comes right after A
+                   EDstar = EDstar, # stopping criteria, the mean of EIF of A, Y, and v between A and Y
+                   iter = iter, # number of iterations to achieve convergence
+                   EDstar.record = EDstar.record) # record of EDstar
+
+
+
+
+
+
+
+
+
+
+  return(list(Onestep=onestep.out, TMLE=tmle.out))
+
 }
 

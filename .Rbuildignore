@@ -1,2 +1,5 @@
 ^ADMGtmle\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+R/initiate.R
+^LICENSE\.md$
