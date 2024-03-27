@@ -1,15 +1,12 @@
----
-title: "Untitled"
-author: "Anna Guo"
-date: "2024-03-27"
-output: github_document
----
+Untitled
+================
+Anna Guo
+2024-03-27
 
 # An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables
 
 To install, run the following code in terminal:
 
-```{bash, eval = FALSE}
+``` bash
 devtools::install_github("annaguo-bios/ADMGtmle")
-
 ```
