@@ -474,7 +474,7 @@ f.district <- function(graph, node){
 #'       \item{n.districts}{The number of districts in the graph.}}
 #' @export
 #'
-count.districts <- function(graph) {
+cnt.districts <- function(graph) {
 
   vertices <- graph$vertices
   di_edges <- graph$di_edges
@@ -607,10 +607,15 @@ is.p.fix <- function(graph, treatment){
   for (child in ch) { # loop over all the children of the treatment
 
     if (list(c(treatment, child)) %in% bi_edges || list(c(child, treatment)) %in% bi_edges) {
+
+      print("The treatment is not primal fixable in the provided graph.")
+
       return(FALSE)  # Bidirected edge found between node and child
     }
 
   }
+
+  print("The treatment is primal fixable in the provided graph.")
   return(TRUE)  # No bidirected edge found between node and any child
 
 
@@ -777,10 +782,10 @@ is.np.saturated <- function(graph) {
     # 1. V1 is not in the parents set of Di for all Di in D, where D is the district of V2 in conditional acyclic directed mixed graphs (CADMG) obtained by recursively fixing as many vertices as possible in V/V2
     # AND 2. The CADMG obtained by recursively fixing as many vertices as possible in V/{Vi, Vj} has more than one district.
 
-    # (count.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)
+    # (cnt.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)
     # !(V1 %in% f.district(f.reachable_closure(graph,c(V1,V2))[[3]], V2))
 
-    if (!(V1 %in% f.parents(graph, f.district(f.reachable_closure(graph,V2)[[3]], V2))) &&  (count.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)){
+    if (!(V1 %in% f.parents(graph, f.district(f.reachable_closure(graph,V2)[[3]], V2))) &&  (cnt.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)){
 
       print("The graph is not nonparametrically saturated.")
       print(c(V1,V2))
