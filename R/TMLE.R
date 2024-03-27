@@ -87,6 +87,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
                  n.iter=500, cvg.criteria=0.01,
                  truncate_lower=0, truncate_upper=1){
 
+  n <- nrow(data)
 
   # make a graph object if it's not provided
   if (is.null(graph)){ graph <- make.graph(vertices=vertices, bi_edges=bi_edges, di_edges=di_edges, multivariate.variables=multivariate.variables)}
