@@ -10,7 +10,6 @@ vignette: >
 # An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables
 
 
-
 ```{r setup}
 library(ADMGtmle)
 ```

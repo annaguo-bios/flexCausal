@@ -268,7 +268,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # Error3: densratio method doesn't support factor variables
 
 
-    if (!all(sapply(replace.vector(c(L.removedA, f.markov_pillow(graph, L.removedA)), multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
+    if (!all(sapply(replace.vector(unique(c(L.removedA, unlist(lapply(1:length(L.removedA),function(i) f.markov_pillow(graph, L.removedA, treatment))))), multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
 
       print("Error in estimating density ratios associated with variables in L: densratio method only support numeric/integer variables, try bayes method instead.")
 
@@ -278,24 +278,41 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # if M,A,X only consists numeric/integer variables: apply density ratio estimation
     for (v in L.removedA){ ## Iterate over each variable in L\A
 
-      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a0
-      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a1
+      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
+      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
 
       densratio.v <- densratio(dat_v.a0, dat_v.a1)
 
-      ratio <- densratio.v$compute_density_ratio(data[,replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)]) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
+      ratio <- densratio.v$compute_density_ratio(data[,replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)]) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
 
       assign(paste0("densratio_",v), ratio)
     }
 
 
+  } else if (ratio.method.L=="dnorm"){ ################### METHOD 2B: densratio method  ###################
 
-  } else if (ratio.method.L=="bayes"){ ################### METHOD 2B: Bayes method ###################
+    if (!all(sapply(replace.vector(L.removedA, multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var]) | length(unique(data[,var]))==2))){
+
+      print("Error in estimating density ratios associated with variables in L: dnorm method only support continuous or binary variables, try bayes method instead.")
+
+      stop() }
+
+
+    # if M,A,X only consists numeric/integer variables: apply density ratio estimation
+    for (v in L.removedA){ ## Iterate over each variable in L\A
+
+      ratio <- calculate_density_ratio_dnorm(a0=0, v , graph, treatment=treatment, data=data) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
+
+      assign(paste0("densratio_",v), ratio)
+    }
+
+
+  }else if (ratio.method.L=="bayes"){ ################### METHOD 2C: Bayes method ###################
 
     for (v in L.removedA){ ## Iterate over each variable in L\A
 
       #### Prepare data for regression and prediction ####
-      dat_bayes.v <- data[,setdiff( replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
+      dat_bayes.v <- data[,setdiff( replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
 
       #### Fit nuisance models ####
 
@@ -390,8 +407,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
   for (v in M){ ## Iterate over each variable in M
 
-    if (treatment %in% f.markov_pillow(graph, v)){ # vertices whose Markov pillow include A
+    if (treatment %in% f.markov_pillow(graph, v, treatment)){ # vertices whose Markov pillow include A
+
       M.mpM.includeA <- c(M.mpM.includeA, v)
+
 
     } else { # vertices whose Markov pillow don't include A
 
@@ -408,7 +427,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # Error: densratio method doesn't support factor variables
 
-    if (!all(sapply(replace.vector(c(M.mpM.includeA, f.markov_pillow(graph, M.mpM.includeA), multivariate.variables)), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
+    if (!all(sapply(replace.vector(unique(c(M.mpM.includeA, unlist(lapply(1:length(M.mpM.includeA), function(i) f.markov_pillow(graph, M.mpM.includeA[i], treatment))))), multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
 
       print("Error in estimating density ratios associated with variables in M: densratio method only support numeric/integer variables, try bayes method instead.")
 
@@ -418,23 +437,42 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # if M and mpi(M) only consists numeric/integer variables: apply density ratio estimation
     for (v in M.mpM.includeA){
 
-      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a0
-      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)] # select rows where A=a1
+      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
+      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
 
       densratio.v <- densratio(dat_v.a0, dat_v.a1)
 
-      ratio <- densratio.v$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables)]) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
+      ratio <- densratio.v$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)]) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
 
       assign(paste0("densratio_",v), ratio)
     }
 
 
-  } else if (ratio.method.M=="bayes"){ ################### METHOD 2B: Bayes method ###################
+  } else if (ratio.method.M=="dnorm"){ ################### METHOD 2B: densratio method  ###################
+
+
+    if (!all(sapply(replace.vector(M.mpM.includeA, multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var]) | length(unique(data[,var]))==2 ))){
+
+      print("Error in estimating density ratios associated with variables in M: dnorm method only support continuous or binary variables, try bayes method instead.")
+
+      stop() }
+
+
+    # if M consists of continuous or binary variables: apply density ratio estimation via dnorm
+    for (v in M.mpM.includeA){ ## Iterate over each variable in L\A
+
+      ratio <- calculate_density_ratio_dnorm(a0=0, v , graph, treatment=treatment, data=data) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
+
+      assign(paste0("densratio_",v), ratio)
+    }
+
+
+  }else if (ratio.method.M=="bayes"){ ################### METHOD 2C: Bayes method ###################
 
     for (v in M.mpM.includeA){ ## Iterate over each variable in M
 
       #### Prepare data for regression and prediction ####
-      dat_bayes.v <- data[,setdiff(replace.vector(c(v, f.markov_pillow(graph, v)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
+      dat_bayes.v <- data[,setdiff(replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
 
       #### Fit nuisance models ####
 
@@ -554,7 +592,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     ### Prepare Markov pillow and dataset for regression and prediction ####
 
     # Find Markov pillow of v
-    mpv <- f.markov_pillow(graph, v) # Markov pillow for outcome
+    mpv <- f.markov_pillow(graph, v, treatment) # Markov pillow for outcome
     mpv <- replace.vector(mpv, multivariate.variables) # replace vertices with it's components if vertices are multivariate
 
     # prepare dataset for regression and prediction

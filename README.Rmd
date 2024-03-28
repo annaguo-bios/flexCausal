@@ -1,11 +1,10 @@
 ---
-title: "Untitled"
+title: "An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables"
 author: "Anna Guo"
-date: "2024-03-27"
+date: "sys.Date()"
 output: github_document
 ---
 
-# An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables
 
 To install, run the following code in terminal:
 

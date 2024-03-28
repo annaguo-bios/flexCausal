@@ -39,7 +39,13 @@ NPS.TMLE.a(
 )
 }
 \arguments{
-\item{a}{Treatment level at which the average counterfactual outcome is computed}
+\item{a}{Treatment level or a length two vector specifying treatment levels.
+The average counterfactual outcome(s) will be computed at the specified treatment level(s).
+If \code{a} is a single value, the function will return \code{E(Y(a))}, which is the
+average counterfactual outcome under the treatment level specified by \code{a}.
+If \code{a} is a vector of length two, say \code{c(value1, value2)}, the function will return
+\code{E(Y(a=value1)) - E(Y(a=value2))}, which is the contrast between the average
+counterfactual outcomes under the two specified treatment levels.}
 
 \item{data}{A Dataframe contains all the variables listed in vertices parameter}
 
