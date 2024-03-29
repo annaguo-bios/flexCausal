@@ -786,7 +786,12 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   onestep.out <- list(estimated_psi=estimated_psi, # estimated parameter
                       lower.ci=lower.ci, # lower bound of 95% CI
                       upper.ci=upper.ci, # upper bound of 95% CI
-                      EIF=EIF # E(Dstar) for Y|M,A,X and M|A,X, and A|X
+                      EIF=EIF, # E(Dstar) for Y|M,A,X and M|A,X, and A|X
+                      EIF.Y=EIF.Y, # EIF of Y|mp(Y)
+                      EIF.A=EIF.A, # EIF of A|mp(A)
+                      EIF.v = rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))), # EIF of v|mp(v) for v between A and Y
+                      p.a1.mpA = p.a1.mpA, # estimated E[A=a1|mp(A)]
+                      mu.next.A = get(paste0("mu.",next.A,"_a0")) # estimated E[v|mp(v)] for v that comes right after A
   )
 
 
