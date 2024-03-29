@@ -306,7 +306,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # if M,A,X only consists numeric/integer variables: apply density ratio estimation
     for (v in L.removedA){ ## Iterate over each variable in L\A
 
-      ratio <- calculate_density_ratio_dnorm(a0=0, v , graph, treatment=treatment, data=data) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
+      ratio <- calculate_density_ratio_dnorm(a0=a0, v , graph, treatment=treatment, data=data) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
 
       assign(paste0("densratio_",v), ratio)
     }
@@ -466,7 +466,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # if M consists of continuous or binary variables: apply density ratio estimation via dnorm
     for (v in M.mpM.includeA){ ## Iterate over each variable in L\A
 
-      ratio <- calculate_density_ratio_dnorm(a0=0, v , graph, treatment=treatment, data=data) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
+      ratio <- calculate_density_ratio_dnorm(a0=a0, v , graph, treatment=treatment, data=data) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
 
       assign(paste0("densratio_",v), ratio)
     }
