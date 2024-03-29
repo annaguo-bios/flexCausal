@@ -294,7 +294,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     }
 
 
-  } else if (ratio.method.L=="dnorm"){ ################### METHOD 2B: densratio method  ###################
+  } else if (ratio.method.L=="dnorm"){ ################### METHOD 2B: dnorm method  ###################
 
     if (!all(sapply(replace.vector(L.removedA, multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var]) | length(unique(data[,var]))==2))){
 
@@ -453,7 +453,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     }
 
 
-  } else if (ratio.method.M=="dnorm"){ ################### METHOD 2B: densratio method  ###################
+  } else if (ratio.method.M=="dnorm"){ ################### METHOD 2B: dnorm method  ###################
 
 
     if (!all(sapply(replace.vector(M.mpM.includeA, multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var]) | length(unique(data[,var]))==2 ))){

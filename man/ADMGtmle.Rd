@@ -77,11 +77,14 @@ counterfactual outcomes under the two specified treatment levels.}
 
 \item{K}{An integer specifying the number of folds for crossfitting.}
 
-\item{ratio.method.L}{A character string indicating the method used to estimate the density ratio associated with L.
-The default is 'bayes'. The "bayes" method estimates the density ratio \eqn{p(L|...,A=a0)/p(L|...,A=a1)} by rewriting it as \eqn{(p(a0|L,...)/p(a1|L,...))/(p(a0|...)/p(a1|...))}.
-Here \eqn{p(a0|L,...)} and \eqn{p(a0|...)} are estimated via linear regression if \code{superlearner.L=F} and via superlearner if \code{superlearner.L=T}.}
+\item{ratio.method.L}{A character string indicating the method used to estimate the density ratio associated with L. There are three options: 'bayes', 'dnorm', and 'densratio'.
+The default is 'bayes'. The \code{bayes} method estimates the density ratio \eqn{p(L|...,A=a0)/p(L|...,A=a1)} by rewriting it as \eqn{(p(a0|L,...)/p(a1|L,...))/(p(a0|...)/p(a1|...))}.
+Here \eqn{p(a0|L,...)} and \eqn{p(a0|...)} are estimated via linear regression if \code{superlearner.L=F} and via superlearner if \code{superlearner.L=T}.
+The \code{dnorm} method estimates the density ratio \eqn{p(L|...,A=a0)/p(L|...,A=a1)} by assuming that the density of L given A is normal if L is continuous. And assume L|...,A can be modeled via logistic regression if L is binary.
+The \code{densratio} method estimates the density ratio \eqn{p(L|...,A=a0)/p(L|...,A=a1)} by using the \code{densratio} function in the \link[densratio]{densratio} package. The \code{densratio} method is computationally expensive compared to the other two methods.
+Therefore, if there is a large number of variables in your graph, it is recommended to use either \code{dnorm} or \code{bayes} method instead.}
 
-\item{ratio.method.M}{A character string indicating the method used to estimate the density ratio associated with M.
+\item{ratio.method.M}{A character string indicating the method used to estimate the density ratio associated with M. There are three options: 'bayes', 'dnorm', and 'densratio'.
 The default is 'bayes'. The "bayes" method estimates the density ratio \eqn{p(M|...,A=a0)/p(M|...,A=a1)} by rewriting it as \eqn{(p(a0|M,...)/p(a1|M,...))/(p(a0|...)/p(a1|...))}.
 Here \eqn{p(a0|M,...)} and \eqn{p(a0|...)} are estimated via linear regression if \code{superlearner.M=F} and via superlearner if \code{superlearner.M=T}.}
 
@@ -130,6 +133,10 @@ Function outputs a list containing TMLE results and onestep results:
 }
 \description{
 Function for estimating the average counterfactual outcome E(Y(a)) under a nonparametrically saturated model.
+}
+\details{
+In assuming normal distribution. The \code{dnorm} method estimates the mean of the normal distribution by fitting a linear regression model with only linear terms and no interaction terms and the variance of the normal distribution sample variance of the error term resulted from the linear regression model.
+In assuming logistic regression, the \code{dnorm} method further assume the logistic regression contains only linear terms and no interaction terms.
 }
 \examples{
 # E(Y(1)) estimation.

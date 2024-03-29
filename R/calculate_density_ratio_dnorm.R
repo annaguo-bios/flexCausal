@@ -35,7 +35,7 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
   mp <- replace.vector(mp, multivariate.variables) # replace multivariate vertices with their elements
 
   # if treatment is not in the Markov pillow of M, return 1
-  if ((treatment %in% mp)){
+  if (!(treatment %in% mp)){
     return(1)
   }
 
@@ -129,7 +129,7 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
       # Store model errors
       model_errors <- data[, M] - predict(model)
 
-      ratio <- dnorm(as.vector(data[,M]), mean = fit.parM[1] +  as.matrix(data.a0[,mp]) %*% fit.parM[2:length(fit.parM)], sd = sd(model_errors))/
+      ratio <- dnorm(as.vector(data[,M]), mean = fit.parM[1] +  as.matrix(data[,mp]) %*% fit.parM[2:length(fit.parM)], sd = sd(model_errors))/
         dnorm(as.vector(data[,M]), mean = fit.parM[1] +  as.matrix(data.a1[,mp]) %*% fit.parM[2:length(fit.parM)], sd = sd(model_errors))
 
     } # end of if-else

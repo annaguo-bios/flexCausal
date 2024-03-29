@@ -27,7 +27,8 @@ If M is univariate or multivariate continuous variable, it assume \eqn{p(M|mp(M)
 \examples{
 graph <- make.graph(vertices=c('A','M','L','Y','X'),
 bi_edges=list(c('A','Y')),
-di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
+di_edges=list(c('X','A'), c('X','M'), c('X','L'),
+c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
 multivariate.variables = list(M=c('M1','M2')))
 ratio <- calculate_density_ratio_dnorm(a0=0, "M", graph, treatment="A", data=data_fig_4a)
 head(ratio)
