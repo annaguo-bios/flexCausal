@@ -241,6 +241,11 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
  # end of if (length(mpA)==0)
 
+  # apply truncation to propensity score to deal with weak overlap.
+  # truncated propensity score within the user specified range of [truncate_lower, truncate_upper]: default=[0,1]
+  p.A1.mpA[p.A1.mpA < truncate_lower] <- truncate_lower
+  p.A1.mpA[p.A1.mpA > truncate_upper] <- truncate_upper
+
   p.a1.mpA <- a1*p.A1.mpA + (1-a1)*(1-p.A1.mpA) # p(A=a1|mp(A))
   p.a0.mpA <-1-p.a1.mpA # p(A=a0|mp(A))
 
@@ -248,10 +253,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   p.a0.mpA[p.a0.mpA<zerodiv.avoid] <- zerodiv.avoid
   p.a1.mpA[p.a1.mpA<zerodiv.avoid] <- zerodiv.avoid
 
-  # apply truncation to propensity score to deal with weak overlap.
-  # truncated propensity score within the user specified range of [truncate_lower, truncate_upper]: default=[0,1]
-  p.A1.mpA[p.A1.mpA < truncate_lower] <- truncate_lower
-  p.A1.mpA[p.A1.mpA > truncate_upper] <- truncate_upper
 
   assign("densratio_A", p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
 
