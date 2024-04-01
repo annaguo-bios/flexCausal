@@ -26,7 +26,9 @@ print("placeholder")
 Graphical models with unmeasured variables can be depicted via the
 Acyclic Directed Mixed Graphs (ADMG). For example, consider the
 following ADMG, where $A$ is the treatment variable and $Y$ is the
-outcome variable: ![](ADMG.png)
+outcome variable:
+
+![](ADMG.png)
 
 ## Installation
 
