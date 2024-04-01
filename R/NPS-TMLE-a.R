@@ -49,6 +49,7 @@
 #' @param n.iter The maximum number of iterations for the iterative update of the nuisances in TMLE. The default value is 500.
 #' @param truncate_lower The lower bound for truncation of the propensity score. The default is 0, which means no truncation.
 #' @param truncate_upper The upper bound for truncation of the propensity score. The default is 1, which means no truncation.
+#' @param zerodiv.avoid A numerical threshold to avoid division by zero in the estimation of the density ratio. The default is 0, which means no threshold.
 #' @return Function outputs a list containing TMLE results and onestep results:
 #' \describe{
 #'       \item{\code{estimated_psi}}{The estimated parameter of interest: \eqn{E(Y^a)}}
