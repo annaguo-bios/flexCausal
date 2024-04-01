@@ -136,7 +136,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
                            linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
 
                            n.iter = n.iter, cvg.criteria = cvg.criteria,
-                           truncate_lower = truncate_lower, truncate_upper = truncate_upper)
+                           truncate_lower = truncate_lower, truncate_upper = truncate_upper,zerodiv.avoid=zerodiv.avoid)
 
       out.a0 <- NPS.TMLE.a(a = a[2], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
 
@@ -161,7 +161,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
                          linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
 
                          n.iter = n.iter, cvg.criteria = cvg.criteria,
-                         truncate_lower = truncate_lower, truncate_upper = truncate_upper)
+                         truncate_lower = truncate_lower, truncate_upper = truncate_upper,zerodiv.avoid=zerodiv.avoid)
 
       ############################ TMLE ############################
       # run TMLE
@@ -240,7 +240,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
                         linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
 
                         n.iter = n.iter, cvg.criteria = cvg.criteria,
-                        truncate_lower = truncate_lower, truncate_upper = truncate_upper)
+                        truncate_lower = truncate_lower, truncate_upper = truncate_upper, zerodiv.avoid=zerodiv.avoid)
       return(out.a)
 
     } # end of if else condition for testing the length of a
