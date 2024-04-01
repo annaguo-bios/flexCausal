@@ -326,6 +326,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         #p(v=a0|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
 
+        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
+
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
 
@@ -345,6 +347,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         #p(v=a0|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -487,6 +491,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         #p(A=a1|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
 
+        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
+
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
 
@@ -502,7 +508,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
 
 
-
         # p(A=1|mp(v)\A,v)
         p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
 
@@ -511,6 +516,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         #p(A=a1|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
 
         save(list=c("bayes_fit","p.a0.mpv","p.a1.mpv"), file=paste0("bayes_fit_sl_",a,"_",v,".RData"))
 
