@@ -494,13 +494,14 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         # such that we can come back to update the density ratio of v once we update the densratioA
         assign(paste0("bayes.densratio_",v), {p.a0.mpv/p.a1.mpv})
 
-        save(list("bayes_fit_cf"), file=paste0("bayes_fit_",v,".RData"))
+        save(list("bayes_fit"), file=paste0("bayes_fit_cf_",v,".RData"))
 
       }else if (superlearner.M==T){
 
         # fit p(A|mp(v)\A,v)
         bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
-        save(list("bayes_fit_SL"), file=paste0("bayes_fit_",v,".RData"))
+
+        save(list("bayes_fit"), file=paste0("bayes_fit_sl_",v,".RData"))
 
         # p(A=1|mp(v)\A,v)
         p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
