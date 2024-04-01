@@ -227,17 +227,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       # make prediction: p(A=1|mp(A))
       p.A1.mpA <- predict(ps_fit, type = "response")[[1]] %>% as.vector()
 
-    } else { #### simple linear regression with user input regression formula: default="A ~ ." ####
-
-      if (truncate_lower!=0 | truncate_upper!=1){ # under weak overlapping issue, it's more stable to run A~X via linear regression
-
-        # fit model
-        ps_fit <- lm(as.formula(formulaA), data=dat_mpA)
-
-        # make prediction: p(A=1|mp(A))
-        p.A1.mpA <- predict(ps_fit)
-
-      } else { # without weak overlapping issue. Run A~X via logistic regression
+    } else { # without weak overlapping issue. Run A~X via logistic regression
 
         # fit model
         ps_fit <- glm(as.formula(formulaA), data=dat_mpA,  family = binomial())
@@ -829,14 +819,15 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # derive epsA
 
-    print("check1")
+
     ind <- A==a1
+
 
     ps_model <- glm(
       ind ~ offset(qlogis(p.a1.mpA))+ clevercoef.A -1, family=binomial(), start=0
     )
 
-    print("check 2")
+
 
     eps.A <- coef(ps_model)
 
@@ -1071,6 +1062,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # update stoping criteria
     EDstar <- mean(EIF.A) + mean(EIF.Y) + mean(rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))))
+
+    print(EDstar) # for debugging
 
     # update iteration counter
     iter <- iter + 1
