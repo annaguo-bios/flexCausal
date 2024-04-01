@@ -828,9 +828,15 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     clevercoef.A <- get(paste0("mu.",next.A,"_a0"))
 
     # derive epsA
+
+    print("check1")
+    ind <- A==a1
+
     ps_model <- glm(
-      (A==a1) ~ offset(qlogis(p.a1.mpA))+ clevercoef.A -1, family=binomial(), start=0
+      ind ~ offset(qlogis(p.a1.mpA))+ clevercoef.A -1, family=binomial(), start=0
     )
+
+    print("check 2")
 
     eps.A <- coef(ps_model)
 
