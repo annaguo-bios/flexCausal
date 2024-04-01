@@ -238,7 +238,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       }
     }
 
-  } # end of if (length(mpA)==0)
+ # end of if (length(mpA)==0)
 
   # apply truncation to propensity score to deal with weak overlap.
   # truncated propensity score within the user specified range of [truncate_lower, truncate_upper]: default=[0,1]
@@ -1067,6 +1067,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # update iteration counter
     iter <- iter + 1
+
+    print(iter) # for debugging
 
     # record EDstar
     EDstar.record <- c(EDstar.record, EDstar)
