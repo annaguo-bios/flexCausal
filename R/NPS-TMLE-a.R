@@ -1065,7 +1065,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     print(paste0("Y: ", mean(EIF.Y)))
     print(paste0("A: ", mean(EIF.A)))
-    print(paste0("AY: ", mean(rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY))))))
+    print(paste0("AY: ", mean(rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))))))
 
     print(EDstar) # for debugging
 
