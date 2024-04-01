@@ -900,10 +900,17 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # update EIF of Y
     EIF.Y <- if(outcome %in% L){(A==a1)*f.M_preY*(Y-mu.Y_a1)}else{(A==a0)*1/f.L_preY*(Y-mu.Y_a0)} # if Y in M
-    print(paste0("f.M_preY: ", sum(is.na(f.M_preY))))
-    print(paste0("f.L_preY: ", sum(is.na(1/f.L_preY))))
-    print(paste0("mu.Y_a1: ", sum(is.na(mu.Y_a1))))
-    print(paste0("mu.Y_a0: ", sum(is.na(mu.Y_a0))))
+    # print(paste0("f.M_preY: ", sum(is.na(f.M_preY))))
+    # print(paste0("f.L_preY: ", sum(is.na(1/f.L_preY))))
+    # print(paste0("mu.Y_a1: ", sum(is.na(mu.Y_a1))))
+    # print(paste0("mu.Y_a0: ", sum(is.na(mu.Y_a0))))
+
+    print(paste0("range of f.M_preY: ", range(f.M_preY)))
+    print(paste0("range of f.L_preY: ", range(1/f.L_preY)))
+    print(paste0("range of mu.Y_a1: ", range(mu.Y_a1)))
+    print(paste0("range of mu.Y_a0: ", range(mu.Y_a0)))
+
+
 
     ######################
     # update mu(v,a_v)
