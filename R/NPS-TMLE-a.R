@@ -837,6 +837,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # update density ratio of A
     assign("densratio_A", (1-p.a1.mpA)/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
 
+    print(paste0("densratio A: ", range(densratio_A)))
+
     # update density ratio for v in L if the ratio.method.L = "bayes"
     if (ratio.method.L == "bayes"){ for (v in L.removedA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/densratio_A)} }
 
@@ -898,6 +900,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # update EIF of Y
     EIF.Y <- if(outcome %in% L){(A==a1)*f.M_preY*(Y-mu.Y_a1)}else{(A==a0)*1/f.L_preY*(Y-mu.Y_a0)} # if Y in M
+    print("f.M_preY: ", sum(is.na(f.M_preY)))
+    print("f.L_preY: ", sum(is.na(1/f.L_preY)))
 
     ######################
     # update mu(v,a_v)
