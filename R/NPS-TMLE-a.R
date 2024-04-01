@@ -90,7 +90,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
                      formulaY="Y ~ .", formulaA="A ~ .", # regression formula for outcome regression and propensity score if superlearner is not used
                      linkY_binary="logit", linkA="logit", # link function for outcome regression and propensity score if superlearner is not used
                      n.iter=500, cvg.criteria=0.01,
-                     truncate_lower=0, truncate_upper=1){
+                     truncate_lower=0, truncate_upper=1, zerodiv.avoid=0){
 
   # attach(data, warn.conflicts=FALSE)
 
@@ -240,14 +240,19 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
  # end of if (length(mpA)==0)
 
+  p.a1.mpA <- a1*p.A1.mpA + (1-a1)*(1-p.A1.mpA) # p(A=a1|mp(A))
+  p.a0.mpA <-1-p.a1.mpA # p(A=a0|mp(A))
+
+  # avoid zero indivision error
+  p.a0.mpA[p.a0.mpA<zerodiv.avoid] <- zerodiv.avoid
+  p.a1.mpA[p.a1.mpA<zerodiv.avoid] <- zerodiv.avoid
+
   # apply truncation to propensity score to deal with weak overlap.
   # truncated propensity score within the user specified range of [truncate_lower, truncate_upper]: default=[0,1]
   p.A1.mpA[p.A1.mpA < truncate_lower] <- truncate_lower
   p.A1.mpA[p.A1.mpA > truncate_upper] <- truncate_upper
 
-  p.a1.mpA <- a1*p.A1.mpA + (1-a1)*(1-p.A1.mpA) # p(A=a1|mp(A))
-
-  assign("densratio_A", (1-p.a1.mpA)/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+  assign("densratio_A", p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
 
 
 
@@ -326,7 +331,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         #p(v=a0|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
 
-        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -348,7 +354,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         #p(v=a0|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
 
-        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -370,6 +377,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         #p(v=a0|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -491,7 +501,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         #p(A=a1|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
 
-        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -517,9 +528,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         #p(A=a1|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
 
-        p.a1.mpv[p.a1.mpv<0.01] <- 0.01 # added to avoid INF
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
-        save(list=c("bayes_fit","p.a0.mpv","p.a1.mpv"), file=paste0("bayes_fit_sl_",a,"_",v,".RData"))
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -541,6 +552,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         #p(v=a0|mp(v)\A,v)
         p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
         assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
@@ -568,10 +582,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
   # Create a data frame using all the vectors
   densratio.M <- data.frame(densratio.vectors.M)
-
-
-
-
 
 
 
@@ -714,8 +724,12 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   #if Y in L: I(A=a1)*I(M < Y){p(M|mp(M))|_{a0}/p(M|mp(M))|_{a1}}*(Y-E(Y|mp(Y))|_{a1})
   #if Y in M: I(A=a0)*I(L < Y){p(L|mp(L))|_{a0}/p(:|mp(L))|_{a1}}*(Y-E(Y|mp(Y))|_{a0})
 
-  f.M_preY <- Reduce(`*`, densratio.M) # Mi precede Y = the set M
-  f.L_preY <- Reduce(`*`, densratio.L) # Li precede Y = the set L
+  # density ratio before Y
+  selected.M <- M[sapply(M, function(m) tau.df$order[tau.df$tau==m] < tau.df$order[tau.df$tau==outcome])] # M precedes Y
+  selected.L <- L[sapply(L, function(l) tau.df$order[tau.df$tau==l] < tau.df$order[tau.df$tau==outcome])] # L precedes Y
+
+  f.M_preY <- Reduce(`*`, densratio.M[,paste0("densratio_",selected.M), drop=F]) # Mi precede Y = the set M
+  f.L_preY <- Reduce(`*`, densratio.L[,paste0("densratio_",selected.L), drop=F]) # Li precede Y = the set L
 
 
   EIF.Y <- if(outcome %in% L){
@@ -847,10 +861,15 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # update p(A=a1|mp(A))
     p.a1.mpA <- plogis(qlogis(p.a1.mpA)+eps.A*(clevercoef.A))
 
-    # update density ratio of A
-    assign("densratio_A", (1-p.a1.mpA)/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+    p.a0.mpA <-1-p.a1.mpA # p(A=a0|mp(A))
 
-    print(paste0("densratio A: ", range(densratio_A)))
+    # avoid zero indivision error
+    p.a0.mpA[p.a0.mpA<zerodiv.avoid] <- zerodiv.avoid
+    p.a1.mpA[p.a1.mpA<zerodiv.avoid] <- zerodiv.avoid
+
+    # update density ratio of A
+    assign("densratio_A", p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+
 
     # update density ratio for v in L if the ratio.method.L = "bayes"
     if (ratio.method.L == "bayes"){ for (v in L.removedA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/densratio_A)} }
@@ -873,8 +892,11 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     ######################
 
     # density ratio before Y
-    f.M_preY <- Reduce(`*`, densratio.M) # Mi precede Y = the set M
-    f.L_preY <- Reduce(`*`, densratio.L) # Li precede Y = the set L
+    selected.M <- M[sapply(M, function(m) tau.df$order[tau.df$tau==m] < tau.df$order[tau.df$tau==outcome])] # M precedes Y
+    selected.L <- L[sapply(L, function(l) tau.df$order[tau.df$tau==l] < tau.df$order[tau.df$tau==outcome])] # L precedes Y
+
+    f.M_preY <- Reduce(`*`, densratio.M[,paste0("densratio_",selected.M), drop=F]) # Mi precede Y = the set M
+    f.L_preY <- Reduce(`*`, densratio.L[,paste0("densratio_",selected.L), drop=F]) # Li precede Y = the set L
 
     # clever coefficient for outcome regression: E(Y|mp(Y))
     weight.Y <- if(outcome %in% L){(A==a1)*f.M_preY}else{(A==a0)*1/f.L_preY}
@@ -913,16 +935,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     # update EIF of Y
     EIF.Y <- if(outcome %in% L){(A==a1)*f.M_preY*(Y-mu.Y_a1)}else{(A==a0)*1/f.L_preY*(Y-mu.Y_a0)} # if Y in M
-    # print(paste0("f.M_preY: ", sum(is.na(f.M_preY))))
-    # print(paste0("f.L_preY: ", sum(is.na(1/f.L_preY))))
-    # print(paste0("mu.Y_a1: ", sum(is.na(mu.Y_a1))))
-    # print(paste0("mu.Y_a0: ", sum(is.na(mu.Y_a0))))
-
-    print(paste0("range of f.M_preY: ", range(f.M_preY)))
-    print(paste0("range of f.L_preY: ", range(1/f.L_preY)))
-    print(paste0("range of mu.Y_a1: ", range(mu.Y_a1)))
-    print(paste0("range of mu.Y_a0: ", range(mu.Y_a0)))
-
 
 
     ######################
@@ -1089,16 +1101,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # update stoping criteria
     EDstar <- mean(EIF.A) + mean(EIF.Y) + mean(rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))))
 
-    print(paste0("Y: ", mean(EIF.Y)))
-    print(paste0("A: ", mean(EIF.A)))
-    print(paste0("AY: ", mean(rowSums(as.data.frame(mget(paste0("EIF.",vertices.between.AY)))))))
-
-    print(EDstar) # for debugging
 
     # update iteration counter
     iter <- iter + 1
-
-    print(iter) # for debugging
 
     # record EDstar
     EDstar.record <- c(EDstar.record, EDstar)
@@ -1142,13 +1147,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
                    EDstar = EDstar, # stopping criteria, the mean of EIF of A, Y, and v between A and Y
                    iter = iter, # number of iterations to achieve convergence
                    EDstar.record = EDstar.record) # record of EDstar
-
-
-
-
-
-
-
 
 
 
