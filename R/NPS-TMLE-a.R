@@ -125,10 +125,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   C <- setCML$C # everything comes before the treatment following topological order tau
 
   L <- setCML$L # variables within the district of treatment and comes after the treatment (including the treatment itself) following topological order tau
-  L <- setdiff(L, outcome) # remove outcome from L if it's there
+  # L <- setdiff(L, outcome) # remove outcome from L if it's there
 
   M <- setCML$M # everything else
-  M <- setdiff(M,outcome) # remove outcome from M if it's there
+  # M <- setdiff(M,outcome) # remove outcome from M if it's there
 
   # re-order vertices according to their topological order in tau
 
