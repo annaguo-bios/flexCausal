@@ -286,17 +286,79 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       dat_v.num.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
       dat_v.num.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
 
-      # used for estimating the denominator of the density ratio
-      dat_v.den.a0 <- data[data[[treatment]] == a0, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a0
-      dat_v.den.a1 <- data[data[[treatment]] == a1, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a1
 
       # since for v in L, the ratio used is p(L|mp(L))|_{a_1}/p(L|mp(L))|_{a_0}. Therefore, if we calculate the ratio p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1} and make it be divided by 1,
       # it may result in large values. Therefore, we calculate the ratio p(L|mp(L))|_{a_1}/p(L|mp(L))|_{a_0} and assign it to 1/ratio to make the ratio estimation more stable.
       densratio.v.num <- densratio(dat_v.num.a1, dat_v.num.a0) # calculate the ratio of a1/a0
-      densratio.v.den <- densratio(dat_v.den.a1, dat_v.den.a0) # calculate the ratio of a1/a0
 
       ratio.num <- densratio.v.num$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)])
-      ratio.den <- densratio.v.den$compute_density_ratio(data[, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)])
+
+      ratio.num[ratio.num<zerodiv.avoid] <- zerodiv.avoid # control for very small numerator values
+
+      ## Estimate the denomator via bays rule to avoid zero division error
+      # used for estimating the denominator of the density ratio
+      dat_bayes.v <- data[, setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables), treatment), drop=F]
+
+      if (crossfit==T){
+
+        bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- bayes_fit$SL.predict
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+
+        # save the density ratio: p(a1|mp(V))/p(a0|mp(V))
+        ratio.den <- p.a1.mpv/p.a0.mpv
+
+
+      }else if (superlearner.L==T){
+
+        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+
+        # save the density ratio: p(a1|mp(V))/p(a0|mp(V))
+        ratio.den <- p.a1.mpv/p.a0.mpv
+
+      } else {
+
+        # estimate density ratio using bayes rule
+        bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bays_fit, type = "response")
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+
+        # save the density ratio: p(a1|mp(V))/p(a0|mp(V))
+        ratio.den <- p.a1.mpv/p.a0.mpv
+
+      }
 
       ratio <- ratio.num/ratio.den # p(L|mp(L))|_{a_1}/p(L|mp(L))|_{a_0}
 
@@ -465,15 +527,75 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       dat_v.num.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
       dat_v.num.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
 
-      # used for estimating the denominator of the density ratio
-      dat_v.den.a0 <- data[data[[treatment]] == a0, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a0
-      dat_v.den.a1 <- data[data[[treatment]] == a1, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a1
-
       densratio.v.num <- densratio(dat_v.num.a0, dat_v.num.a1)
-      densratio.v.den <- densratio(dat_v.den.a0, dat_v.den.a1)
 
       ratio.num <- densratio.v.num$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)])
-      ratio.den <- densratio.v.den$compute_density_ratio(data[, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)])
+
+
+      ## Estimator the denomator via bayes rule to avoid zero division
+      # used for estimating the denominator of the density ratio
+      dat_bayes.v <- data[, setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables), treatment), drop=F]
+
+      if (crossfit==T){
+
+        bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- bayes_fit$SL.predict
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+
+        # save the density ratio: p(a0|mp(V))/p(a1|mp(V))
+        ratio.den <- p.a0.mpv/p.a1.mpv
+
+
+      }else if (superlearner.L==T){
+
+        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+
+        # save the density ratio: p(a0|mp(V))/p(a1|mp(V))
+        ratio.den <- p.a0.mpv/p.a1.mpv
+
+      } else {
+
+        # estimate density ratio using bayes rule
+        bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+
+        # p(A=1|mp(v)\A,v)
+        p.A1.mpv <- predict(bays_fit, type = "response")
+
+        #p(v=a0|mp(v)\A,v)
+        p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
+
+        #p(v=a0|mp(v)\A,v)
+        p.a1.mpv <- 1-p.a0.mpv
+
+        p.a1.mpv[p.a1.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+        p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
+
+        # save the density ratio: p(a0|mp(V))/p(a1|mp(V))
+        ratio.den <- p.a0.mpv/p.a1.mpv
+
+      }
 
       ratio <- ratio.num/ratio.den # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
 
