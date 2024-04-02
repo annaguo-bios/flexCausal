@@ -125,8 +125,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   C <- setCML$C # everything comes before the treatment following topological order tau
 
   L <- setCML$L # variables within the district of treatment and comes after the treatment (including the treatment itself) following topological order tau
+  L <- setdiff(L, outcome) # remove outcome from L if it's there
 
   M <- setCML$M # everything else
+  M <- setdiff(M,outcome) # remove outcome from M if it's there
 
   # re-order vertices according to their topological order in tau
 
@@ -280,14 +282,23 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # if M,A,X only consists numeric/integer variables: apply density ratio estimation
     for (v in L.removedA){ ## Iterate over each variable in L\A
 
-      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
-      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
+      # used for estimating numerator of the density ratio
+      dat_v.num.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
+      dat_v.num.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
+
+      # used for estimating the denominator of the density ratio
+      dat_v.den.a0 <- data[data[[treatment]] == a0, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a0
+      dat_v.den.a1 <- data[data[[treatment]] == a1, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a1
 
       # since for v in L, the ratio used is p(L|mp(L))|_{a_1}/p(L|mp(L))|_{a_0}. Therefore, if we calculate the ratio p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1} and make it be divided by 1,
       # it may result in large values. Therefore, we calculate the ratio p(L|mp(L))|_{a_1}/p(L|mp(L))|_{a_0} and assign it to 1/ratio to make the ratio estimation more stable.
-      densratio.v <- densratio(dat_v.a1, dat_v.a0) # calculate the ratio of a1/a0
+      densratio.v.num <- densratio(dat_v.num.a1, dat_v.num.a0) # calculate the ratio of a1/a0
+      densratio.v.den <- densratio(dat_v.den.a1, dat_v.den.a0) # calculate the ratio of a1/a0
 
-      ratio <- densratio.v$compute_density_ratio(data[,replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)]) # p(L|mp(L))|_{a_0}/p(L|mp(L))|_{a_1}
+      ratio.num <- densratio.v.num$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)])
+      ratio.den <- densratio.v.den$compute_density_ratio(data[, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)])
+
+      ratio <- ratio.num/ratio.den # p(L|mp(L))|_{a_1}/p(L|mp(L))|_{a_0}
 
       assign(paste0("densratio_",v), 1/ratio) # but assign ratio a0/a1
     }
@@ -434,7 +445,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   } ## Iterate over each variable in M
 
   # assign ratio=1 for vertices in M.mpM.excludeA
-  for (m in M.mpM.excludeA) { assign(paste("densratio_", m), 1) }
+  for (m in M.mpM.excludeA) { assign(paste0("densratio_", m), 1) }
 
   if (ratio.method.M=="densratio"){ ################### METHOD 2A: densratio method  ###################
 
@@ -450,12 +461,21 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     # if M and mpi(M) only consists numeric/integer variables: apply density ratio estimation
     for (v in M.mpM.includeA){
 
-      dat_v.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
-      dat_v.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
+      # used for estimating numerator of the density ratio
+      dat_v.num.a0 <- data[data[[treatment]] == a0, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a0
+      dat_v.num.a1 <- data[data[[treatment]] == a1, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)] # select rows where A=a1
 
-      densratio.v <- densratio(dat_v.a0, dat_v.a1)
+      # used for estimating the denominator of the density ratio
+      dat_v.den.a0 <- data[data[[treatment]] == a0, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a0
+      dat_v.den.a1 <- data[data[[treatment]] == a1, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)] # select rows where A=a1
 
-      ratio <- densratio.v$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)]) # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
+      densratio.v.num <- densratio(dat_v.num.a0, dat_v.num.a1)
+      densratio.v.den <- densratio(dat_v.den.a0, dat_v.den.a1)
+
+      ratio.num <- densratio.v.num$compute_density_ratio(data[, replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables)])
+      ratio.den <- densratio.v.den$compute_density_ratio(data[, replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables)])
+
+      ratio <- ratio.num/ratio.den # p(M|mp(M))|_{a_0}/p(M|mp(M))|_{a_1}
 
       assign(paste0("densratio_",v), ratio)
     }

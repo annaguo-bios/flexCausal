@@ -263,7 +263,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
 
   }else{
 
-    stop("Estimation is not supported for graph with Verma constraints yet.")
+    stop("Estimation is not supported for graphs with Verma constraints yet.")
 
 
   }
