@@ -3,6 +3,7 @@
 export(ADMGtmle)
 export(CML)
 export(NPS.TMLE.a)
+export(backdoor.TMLE.a)
 export(calculate_density_ratio_dnorm)
 export(cnt.districts)
 export(f.adj_matrix)

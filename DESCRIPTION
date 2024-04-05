@@ -18,8 +18,7 @@ Imports:
     densratio,
     MASS,
     utils,
-    mvtnorm,
-    np
+    mvtnorm
 Depends: 
     R (>= 2.10)
 LazyData: true

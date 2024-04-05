@@ -69,7 +69,7 @@
 #' NPS.TMLE.a(a=1,data=data_fig_4a, vertices=c('A','M','L','Y','X'),
 #' bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','M'),
 #' c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-#' treatment='A', outcome='Y', multivariate.variables = list(M=c('M1','M2')))
+#' treatment='A', outcome='Y', multivariate.variables = list(M=c('M.1','M.2')))
 #' @import dplyr MASS densratio SuperLearner mvtnorm stats itertools utils
 #' @export
 #'

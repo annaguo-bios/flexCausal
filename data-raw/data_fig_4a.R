@@ -1,4 +1,3 @@
-library(MASS)
 ## Simulation Figure4(a) ==
 set.seed(7)
 
@@ -17,10 +16,10 @@ generate_data <- function(n,parA = c(1,1), parU=c(1,1,1,0), parM = matrix(c(1, 1
 
   Y <- parY[1] + parY[2]*L  + parY[3]*M[,1] + parY[4]*M[,2] + parY[5]*X + parY[6]*U  + rnorm(n, 0, sd.Y) # p(Y|U,M,X)
 
-  data <- data.frame(X=X, U=U, A=A, M1=M[,1], M2=M[,2], L=L, Y=Y)
+  data <- data.frame(X=X, U=U, A=A, M=M, L=L, Y=Y)
 
   # propensity score
-  ps <- A*(parA[1] + parA[2]*X)+(1-A)*(1-(parA[1] + parA[2]*X))
+  ps <- A*(plogis(parA[1] + parA[2]*X))+(1-A)*(1-(plogis(parA[1] + parA[2]*X)))
 
   return(list(data = data,
               parA=parA,
@@ -35,6 +34,8 @@ generate_data <- function(n,parA = c(1,1), parU=c(1,1,1,0), parM = matrix(c(1, 1
               ps=ps))
 }
 
+
 data_fig_4a <- generate_data(2000)$data
 
 usethis::use_data(data_fig_4a, overwrite = T)
+
