@@ -359,10 +359,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         } else {
 
           # estimate density ratio using bayes rule
-          bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+          bayes_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
 
           # p(A=1|mp(v)\A,v)
-          p.A1.mpv <- predict(bays_fit, type = "response")
+          p.A1.mpv <- predict(bayes_fit, type = "response")
 
           #p(v=a0|mp(v)\A,v)
           p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
@@ -451,7 +451,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bays_fit_v <- CV.SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
+          bayes_fit_v <- CV.SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- bayes_fit_v$SL.predict
@@ -503,7 +503,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bays_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
+          bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- predict(bayes_fit_v, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -522,13 +522,13 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }
 
-      } else {
+      } else { # Linear model
 
         # estimate density ratio using bayes rule
-        bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+        bayes_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
 
         # p(A=1|mp(v)\A,v)
-        p.A1.mpv <- predict(bays_fit, type = "response")
+        p.A1.mpv <- predict(bayes_fit, type = "response")
 
         #p(v=a0|mp(v)\A,v)
         p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
@@ -560,10 +560,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bays_fit_v <- glm(A ~ ., data=dat_bayes.v_v, family = binomial())
+          bayes_fit_v <- glm(A ~ ., data=dat_bayes.v_v, family = binomial())
 
           # p(A=1|mp(v)\A)
-          p.A1.mpv_v <- predict(bays_fit_v, type = "response")
+          p.A1.mpv_v <- predict(bayes_fit_v, type = "response")
 
           #p(v=a0|mp(v)\A)
           p.a0.mpv_v <- a0*p.A1.mpv_v+(1-a0)*(1-p.A1.mpv_v)
@@ -689,7 +689,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
           ratio.den <- p.a0.mpv/p.a1.mpv
 
 
-        }else if (superlearner.L==T){
+        }else if (superlearner.M==T){
 
           bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
 
@@ -711,10 +711,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         } else {
 
           # estimate density ratio using bayes rule
-          bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+          bayes_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
 
           # p(A=1|mp(v)\A,v)
-          p.A1.mpv <- predict(bays_fit, type = "response")
+          p.A1.mpv <- predict(bayes_fit, type = "response")
 
           #p(v=a0|mp(v)\A,v)
           p.a0.mpv <- a0*p.A1.mpv+(1-a0)*(1-p.A1.mpv)
@@ -804,7 +804,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bays_fit_v <- CV.SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
+          bayes_fit_v <- CV.SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- bayes_fit_v$SL.predict  # p(A=1|X)
@@ -856,7 +856,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bays_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
+          bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- predict(bayes_fit_v, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -878,11 +878,11 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       } else {
 
         # estimate density ratio using bayes rule
-        bays_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
+        bayes_fit <- glm(A ~ ., data=dat_bayes.v, family = binomial())
 
 
         # p(A=1|mp(v)\A,v)
-        p.A1.mpv <- predict(bays_fit, type = "response")
+        p.A1.mpv <- predict(bayes_fit, type = "response")
 
 
         #p(v=a0|mp(v)\A,v)
@@ -910,10 +910,10 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bays_fit_v <- glm(A ~ ., data=dat_bayes.v_v, family = binomial())
+          bayes_fit_v <- glm(A ~ ., data=dat_bayes.v_v, family = binomial())
 
           # p(A=1|mp(v)\A)
-          p.A1.mpv_v <- predict(bays_fit_v, type = "response")
+          p.A1.mpv_v <- predict(bayes_fit_v, type = "response")
 
           #p(v=a0|mp(v)\A)
           p.a0.mpv_v <- a0*p.A1.mpv_v+(1-a0)*(1-p.A1.mpv_v)
