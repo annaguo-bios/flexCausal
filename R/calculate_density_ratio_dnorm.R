@@ -121,7 +121,9 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
     } else { # continuous variable
 
       # For continuous columns, use lm
-      model <- lm(data[, M] ~ . , data=data[, mp])
+      var <- data[, M]
+
+      model <- lm( var ~ . , data=data[, mp])
 
       # model coefficients
       fit.parM <- coef(model)
@@ -139,3 +141,4 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
   return(ratio)
 
 }
+

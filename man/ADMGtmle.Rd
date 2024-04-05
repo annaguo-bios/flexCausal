@@ -35,7 +35,8 @@ ADMGtmle(
   n.iter = 500,
   cvg.criteria = 0.01,
   truncate_lower = 0,
-  truncate_upper = 1
+  truncate_upper = 1,
+  zerodiv.avoid = 0
 )
 }
 \arguments{
@@ -114,6 +115,8 @@ If the absolute of the mean of efficient influence function is less than cvg.cri
 \item{truncate_lower}{The lower bound for truncation of the propensity score. The default is 0, which means no truncation.}
 
 \item{truncate_upper}{The upper bound for truncation of the propensity score. The default is 1, which means no truncation.}
+
+\item{zerodiv.avoid}{A numerical threshold to avoid division by zero in the estimation of the density ratio. The default is 0, which means no threshold.}
 }
 \value{
 Function outputs a list containing TMLE results and onestep results:

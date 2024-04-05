@@ -965,4 +965,3 @@ rerank <- function(target,reference){
 
   return(re_ranked_target)
 }
-
