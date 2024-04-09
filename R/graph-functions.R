@@ -608,7 +608,7 @@ is.p.fix <- function(graph, treatment){
 
     if (list(c(treatment, child)) %in% bi_edges || list(c(child, treatment)) %in% bi_edges) {
 
-      print("The treatment is not primal fixable in the provided graph.")
+      message("The treatment is not primal fixable in the provided graph.")
 
       return(FALSE)  # Bidirected edge found between node and child
     }
@@ -664,7 +664,7 @@ is.fix <- function(graph, treatment){
 
   }
 
-  print("The treatment is primal fixable in the provided graph.")
+  message("The treatment is fixable in the provided graph.")
   return(TRUE)  # No bidirected edge found between node and any descendant
 
 
@@ -844,7 +844,7 @@ is.np.saturated <- function(graph) {
 
   } # end of for loop
 
-  print("The graph is nonparametrically saturated.")
+  message("The graph is nonparametrically saturated.")
 
   return(TRUE)
 }
@@ -895,7 +895,7 @@ is.mb.shielded <- function(graph) {
 
   } # end of for loop
 
-  print("The graph is mb-shielded.")
+  message("The graph is mb-shielded.")
   return(TRUE)
 }
 

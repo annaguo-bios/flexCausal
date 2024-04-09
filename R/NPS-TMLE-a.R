@@ -70,7 +70,13 @@
 #' bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','M'),
 #' c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
 #' treatment='A', outcome='Y', multivariate.variables = list(M=c('M.1','M.2')))
-#' @import dplyr MASS densratio SuperLearner mvtnorm stats itertools utils
+#' @importFrom dplyr %>% mutate select
+#' @importFrom MASS mvrnorm
+#' @importFrom SuperLearner CV.SuperLearner SuperLearner
+#' @importFrom mvtnorm dmvnorm
+#' @importFrom densratio densratio
+#' @importFrom utils combn
+#' @importFrom stats rnorm runif rbinom dnorm dbinom binomial gaussian predict glm as.formula qlogis plogis lm coef cov sd
 #' @export
 #'
 #'
@@ -173,6 +179,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     or_fit <- CV.SuperLearner(Y=Y, X=dat_mpY, family = fit.family, V = K, SL.library = lib.Y, control = list(saveFitLibrary=T),saveAll = T)
 
+    or_fit <- .force_weight(or_fit, model="cv", lib=lib.Y) # force weight to be 1 for the one algorithm
+
     mu.Y_a1 <- unlist(lapply(1:K, function(x) predict(or_fit$AllSL[[x]], newdata=dat_mpY.a1[or_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) or_fit$folds[[x]])))]
     mu.Y_a0 <- unlist(lapply(1:K, function(x) predict(or_fit$AllSL[[x]], newdata=dat_mpY.a0[or_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) or_fit$folds[[x]])))]
 
@@ -182,6 +190,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
 
     or_fit <- SuperLearner(Y=Y, X=dat_mpY, family = fit.family, SL.library = lib.Y)
+
+    or_fit <- .force_weight(or_fit, model="sl", lib=lib.Y) # force weight to be 1 for the one algorithm
 
     mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1)[[1]] %>% as.vector()
     mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0)[[1]] %>% as.vector()
@@ -223,6 +233,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       # fit model
       ps_fit <- CV.SuperLearner(Y=A, X=dat_mpA, family = binomial(), V = K, SL.library = lib.A, control = list(saveFitLibrary=T),saveAll = T)
 
+      ps_fit <- .force_weight(ps_fit, model="cv", lib=lib.A) # force weight to be 1 for the one algorithm
+
       # make prediction: p(A=1|mp(A))
       p.A1.mpA <- ps_fit$SL.predict
 
@@ -230,6 +242,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
       # fit model
       ps_fit <- SuperLearner(Y=A, X=dat_mpA, family = binomial(), SL.library = lib.A)
+
+      ps_fit <- .force_weight(ps_fit, model="sl", lib=lib.A) # force weight to be 1 for the one algorithm
 
       # make prediction: p(A=1|mp(A))
       p.A1.mpA <- predict(ps_fit, type = "response")[[1]] %>% as.vector()
@@ -321,6 +335,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
           bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
 
+          bayes_fit <- .force_weight(bayes_fit, model="cv", lib=lib.L) # force weight to be 1 for the one algorithm
+
           # p(A=1|mp(v)\A,v)
           p.A1.mpv <- bayes_fit$SL.predict
 
@@ -340,6 +356,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         }else if (superlearner.L==T){
 
           bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+
+          bayes_fit <- .force_weight(bayes_fit, model="sl", lib=lib.L) # force weight to be 1 for the one algorithm
 
           # p(A=1|mp(v)\A,v)
           p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -425,6 +443,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
 
+        bayes_fit <- .force_weight(bayes_fit, model="cv", lib=lib.L) # force weight to be 1 for the one algorithm
+
         # p(A=1|mp(v)\A,v)
         p.A1.mpv <- bayes_fit$SL.predict
 
@@ -453,6 +473,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
           bayes_fit_v <- CV.SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
 
+          bayes_fit_v <- .force_weight(bayes_fit_v, model="cv", lib=lib.L) # force weight to be 1 for the one algorithm
+
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- bayes_fit_v$SL.predict
 
@@ -477,6 +499,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       }else if (superlearner.L==T){
 
         bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+
+        bayes_fit <- .force_weight(bayes_fit, model="sl", lib=lib.L) # force weight to be 1 for the one algorithm
 
         # p(A=1|mp(v)\A,v)
         p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -504,6 +528,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         }else{
 
           bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
+
+          bayes_fit_v <- .force_weight(bayes_fit_v, model="sl", lib=lib.L) # force weight to be 1 for the one algorithm
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- predict(bayes_fit_v, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -671,7 +697,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         if (crossfit==T){
 
-          bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
+          bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
+
+          bayes_fit <- .force_weight(bayes_fit, model="cv", lib=lib.M) # force weight to be 1 for the one algorithm
 
           # p(A=1|mp(v)\A,v)
           p.A1.mpv <- bayes_fit$SL.predict
@@ -691,7 +719,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else if (superlearner.M==T){
 
-          bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+          bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.M)
+
+          bayes_fit <- .force_weight(bayes_fit, model="sl", lib=lib.M) # force weight to be 1 for the one algorithm
 
           # p(A=1|mp(v)\A,v)
           p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -779,6 +809,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         # fit p(A|mp(v)\A,v)
         bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
 
+        bayes_fit <- .force_weight(bayes_fit, model="cv", lib=lib.M) # force weight to be 1 for the one algorithm
+
         # p(A=1|mp(v)\A,v)
         p.A1.mpv <- bayes_fit$SL.predict
 
@@ -806,6 +838,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
           bayes_fit_v <- CV.SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
 
+          bayes_fit_v <- .force_weight(bayes_fit_v, model="cv", lib=lib.M) # force weight to be 1 for the one algorithm
+
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- bayes_fit_v$SL.predict  # p(A=1|X)
 
@@ -826,7 +860,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       }else if (superlearner.M==T){
 
         # fit p(A|mp(v)\A,v)
-        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.M)
+
+        bayes_fit <- .force_weight(bayes_fit, model="sl", lib=lib.M) # force weight to be 1 for the one algorithm
 
 
         # p(A=1|mp(v)\A,v)
@@ -856,7 +892,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
+          bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.M)
+
+          bayes_fit_v <- .force_weight(bayes_fit_v, model="sl", lib=lib.M) # force weight to be 1 for the one algorithm
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- predict(bayes_fit_v, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -1009,6 +1047,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
       v_fit <- CV.SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), V = K, SL.library = lib.seq, control = list(saveFitLibrary=T), saveAll = T)
 
+      v_fit <- .force_weight(v_fit, model="cv", lib=lib.seq) # force weight to be 1 for the one algorithm
+
 
       ######## prediction: A in mp(v) vs A NOT in mp(v) ########
       if (treatment %in% mpv){
@@ -1034,6 +1074,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     } else if (superlearner.seq==T){ #### super learner #####
 
       v_fit <- SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), SL.library = lib.seq)
+
+      v_fit <- .force_weight(v_fit, model="sl", lib=lib.seq) # force weight to be 1 for the one algorithm
 
       ######## prediction: A in mp(v) vs A NOT in mp(v) ########
       if (treatment %in% mpv){
@@ -1349,6 +1391,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
           v_fit <- CV.SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), V = K, SL.library = lib.seq, control = list(saveFitLibrary=T),saveAll = T)
 
+          v_fit <- .force_weight(v_fit, model="cv", lib=lib.seq) # force weight to be 1 for the one algorithm
+
 
           #################### prediction: A in mp(v) vs A NOT in mp(v) ######################
           if (treatment %in% mpv){
@@ -1372,6 +1416,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         } else if (superlearner.seq==T){ #### super learner #####
 
           v_fit <- SuperLearner(Y=next.mu.transform, X=dat_mpv, family = gaussian(), SL.library = lib.seq)
+
+          v_fit <- .force_weight(v_fit, model="sl", lib=lib.seq) # force weight to be 1 for the one algorithm
 
 
           #################### prediction: A in mp(v) vs A NOT in mp(v) ######################

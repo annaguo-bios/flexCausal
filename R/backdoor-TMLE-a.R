@@ -42,7 +42,13 @@
 #' backdoor.TMLE.a(a=1,data=data_backdoor, vertices=c('A','Y','X'),
 #' di_edges=list(c('X','A'), c('X','Y'), c('A','Y')),
 #' treatment='A', outcome='Y')
-#' @import dplyr MASS densratio SuperLearner mvtnorm stats itertools utils
+#' @importFrom dplyr %>% mutate select
+#' @importFrom MASS mvrnorm
+#' @importFrom SuperLearner CV.SuperLearner SuperLearner
+#' @importFrom mvtnorm dmvnorm
+#' @importFrom densratio densratio
+#' @importFrom utils combn
+#' @importFrom stats rnorm runif rbinom dnorm dbinom binomial gaussian predict glm as.formula qlogis plogis lm coef cov sd
 #' @export
 #'
 #'

@@ -70,7 +70,13 @@
 #' bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','M'),
 #' c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
 #' treatment='A', outcome='Y', multivariate.variables = list(M=c('M.1','M.2')))
-#' @import dplyr MASS densratio SuperLearner mvtnorm stats itertools utils
+#' @importFrom dplyr %>% mutate select
+#' @importFrom MASS mvrnorm
+#' @importFrom SuperLearner CV.SuperLearner SuperLearner
+#' @importFrom mvtnorm dmvnorm
+#' @importFrom densratio densratio
+#' @importFrom utils combn
+#' @importFrom stats rnorm runif rbinom dnorm dbinom binomial gaussian predict glm as.formula qlogis plogis lm coef cov sd
 #' @export
 #'
 #'
@@ -93,7 +99,6 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
                  n.iter=500, cvg.criteria=0.01,
                  truncate_lower=0, truncate_upper=1, zerodiv.avoid=0){
 
-  n <- nrow(data)
 
   # make a graph object if it's not provided
   if (is.null(graph)){ graph <- make.graph(vertices=vertices, bi_edges=bi_edges, di_edges=di_edges, multivariate.variables=multivariate.variables)}
@@ -104,307 +109,69 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
   #####################################################
 
 
-  if (is.fix(graph, treatment)){ # if the graph is fixable
+  if (suppressMessages(is.fix(graph, treatment))){ # if the graph is fixable
 
-    print("The treatment is fixable. Estimation provided via backdoor adjustment.")
-
-
-    if (is.vector(a) & length(a)>2){ ## Invalid input ==
-
-      print("Invalid input. Enter a=c(vaule1,value2) for average causal effect estimation: (Y(a=value1)) - E(Y(a=value2)). Enter a=value1 for average counterfactual outcome estimation at the specified treatment level value1.")
-
-    }else if (is.vector(a) & length(a)==2){ ## ATE estimate ==
-
-      ## TMLE estimator
-
-      out.a1 <- backdoor.TMLE.a(a = a[1], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
-
-                                superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                                superlearner.A = superlearner.A, # whether run superlearner for propensity score
-
-                                crossfit = crossfit, K = K,
-
-                                lib.Y = lib.Y, # superlearner library for outcome regression
-                                lib.A = lib.A, # superlearner library for propensity score
-
-                                formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                                linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                                truncate_lower = truncate_lower, truncate_upper = truncate_upper)
-
-      out.a0 <- backdoor.TMLE.a(a = a[2], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
-
-                                superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                                superlearner.A = superlearner.A, # whether run superlearner for propensity score
-
-                                crossfit = crossfit, K = K,
-
-                                lib.Y = lib.Y, # superlearner library for outcome regression
-                                lib.A = lib.A, # superlearner library for propensity score
-
-                                formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                                linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                                truncate_lower = truncate_lower, truncate_upper = truncate_upper)
-
-      ############################ aipw ############################
-      # run aipw
-      aipw_output_Y1 <- out.a1$aipw
-      aipw_output_Y0 <- out.a0$aipw
-
-      # estimate E[Y(1)], E[Y(0)], and ATE
-      hat_E.Y1 = aipw_output_Y1$estimated_psi
-      hat_E.Y0 = aipw_output_Y0$estimated_psi
-      hat_ATE = hat_E.Y1 - hat_E.Y0
-
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((aipw_output_Y1$EIF-aipw_output_Y0$EIF)^2)/n)
-
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((aipw_output_Y1$EIF-aipw_output_Y0$EIF)^2)/n)
-
-      aipw.out <- list(ATE=hat_ATE, # estimated parameter
-                       lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                       upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                       EIF=aipw_output_Y1$EIF-aipw_output_Y0$EIF # EIF
-      )
+    message("The treatment is fixable. Estimation provided via backdoor adjustment.")
 
 
-      ############################ gcomp ############################
-      # run gcomp
-      gcomp_output_Y1 <- out.a1$gcomp
-      gcomp_output_Y0 <- out.a0$gcomp
+    np.out <- .call_backdoor(a = a, data = data, vertices = vertices,
+                             di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome,
+                             multivariate.variables = multivariate.variables, graph = graph,
 
-      # estimate E[Y(1)], E[Y(0)], and ATE
-      hat_E.Y1 = gcomp_output_Y1$estimated_psi
-      hat_E.Y0 = gcomp_output_Y0$estimated_psi
-      hat_ATE = hat_E.Y1 - hat_E.Y0
+                             superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
+                             superlearner.A = superlearner.A, # whether run superlearner for propensity score
 
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
+                             crossfit = crossfit, K = K,
 
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
+                             lib.Y = lib.Y, # superlearner library for outcome regression
+                             lib.A = lib.A, # superlearner library for propensity score
 
-      gcomp.out <- list(ATE=hat_ATE, # estimated parameter
-                        lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                        upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                        EIF=gcomp_output_Y1$EIF-gcomp_output_Y0$EIF # EIF
-      )
+                             formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
+                             linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
 
-      ############################ ipw ############################
-      # run ipw
-      ipw_output_Y1 <- out.a1$ipw
-      ipw_output_Y0 <- out.a0$ipw
+                             truncate_lower = truncate_lower, truncate_upper = truncate_upper)
 
-      # estimate E[Y(1)], E[Y(0)], and ATE
-      hat_E.Y1 = ipw_output_Y1$estimated_psi
-      hat_E.Y0 = ipw_output_Y0$estimated_psi
-      hat_ATE = hat_E.Y1 - hat_E.Y0
-
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
-
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
-
-      ipw.out <- list(ATE=hat_ATE, # estimated parameter
-                      lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                      upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                      EIF=ipw_output_Y1$EIF-ipw_output_Y0$EIF # EIF
-      )
-
-      cat(paste0("AIPW estimated ACE: ",round(aipw.out$ATE,2),"; 95% CI: (",round(aipw.out$lower.ci,2),", ",round(aipw.out$upper.ci,2),") \n",
-                 "IPW estimated ACE: ",round(ipw.out$ATE,2),"; 95% CI: (",round(ipw.out$lower.ci,2),", ",round(ipw.out$upper.ci,2),") \n",
-                 "G-comp estimated ACE: ",round(gcomp.out$ATE,2),"; 95% CI: (",round(gcomp.out$lower.ci,2),", ",round(gcomp.out$upper.ci,2),")"))
-
-      np.out <- list(AIPW=aipw.out, IPW=ipw.out, Gcomp=gcomp.out,
-                     AIPW_Y1 = aipw_output_Y1, AIPW_Y0 = aipw_output_Y0, Gcomp_Y1 = gcomp_output_Y1,
-                     Gcomp_Y0 = gcomp_output_Y0, IPW_Y1 = ipw_output_Y1, IPW_Y0 = ipw_output_Y0)
+    return(np.out)
 
 
-    }else if (length(a)==1) { ## E(Y^1) estimate ==
-
-      out.a <- NPS.TMLE.a(a = a, data = data, vertices = vertices,
-                          di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome,
-                          multivariate.variables = multivariate.variables, graph = graph,
-
-                          superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                          superlearner.A = superlearner.A, # whether run superlearner for propensity score
-
-                          crossfit = crossfit, K = K,
-
-                          lib.Y = lib.Y, # superlearner library for outcome regression
-                          lib.A = lib.A, # superlearner library for propensity score
-
-                          formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                          linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                          truncate_lower = truncate_lower, truncate_upper = truncate_upper)
-
-      np.out <- out.a
-
-    } # end of if else condition for testing the length of a
+  }else if (!suppressMessages(is.p.fix(graph, treatment))){ # the graph is not fixable: if the graph is primal fixable
 
 
 
 
-
-
-  }else if (!is.p.fix(graph, treatment)){ # the graph is not fixable: if the graph is primal fixable
-
-
-
-
-    stop("The treatment effect may or may not be identified. Further investigation is needed.") # the graph is not primal fixable
+    stop("The treatment is not fixable nor primal-fixable. The treatment effect may or may not be identified. Further investigation is needed.") # the graph is not primal fixable
 
 
 
   }else{ # the graph is not fixable: the graph is primal fixable
 
-    ############################################################
-    # Perform estimation with the NPS method
-    ############################################################
 
-    if (is.vector(a) & length(a)>2){ ## Invalid input ==
+    np.out <- .call_nps(a = a, data = data, vertices = vertices,
+                        di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome,
+                        multivariate.variables = multivariate.variables, graph = graph,
 
-      print("Invalid input. Enter a=c(vaule1,value2) for average causal effect estimation: (Y(a=value1)) - E(Y(a=value2)). Enter a=value1 for average counterfactual outcome estimation at the specified treatment level value1.")
+                        superlearner.seq = superlearner.seq, # whether run superlearner for sequential regression
+                        superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
+                        superlearner.A = superlearner.A, # whether run superlearner for propensity score
+                        superlearner.M = superlearner.M, # whether run superlearner for estimating densratio for M using bayes method
+                        superlearner.L = superlearner.L, # whether run superlearner for estimating densratio for L using bayes method
 
-    }else if (is.vector(a) & length(a)==2){ ## ATE estimate ==
+                        crossfit = crossfit, K = K,
 
-      ## TMLE estimator
+                        ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
+                        ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
 
-      out.a1 <- NPS.TMLE.a(a = a[1], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
+                        lib.seq = lib.seq, # superlearner library for sequential regression
+                        lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L
+                        lib.M = lib.M, # superlearner library for density ratio estimation via bayes rule for variables in M
+                        lib.Y = lib.Y, # superlearner library for outcome regression
+                        lib.A = lib.A, # superlearner library for propensity score
 
-                           superlearner.seq = superlearner.seq, # whether run superlearner for sequential regression
-                           superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                           superlearner.A = superlearner.A, # whether run superlearner for propensity score
-                           superlearner.M = superlearner.M, # whether run superlearner for estimating densratio for M using bayes method
-                           superlearner.L = superlearner.L, # whether run superlearner for estimating densratio for L using bayes method
+                        formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
+                        linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
 
-                           crossfit = crossfit, K = K,
-
-                           ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
-                           ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
-
-                           lib.seq = lib.seq, # superlearner library for sequential regression
-                           lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L
-                           lib.M = lib.M, # superlearner library for density ratio estimation via bayes rule for variables in M
-                           lib.Y = lib.Y, # superlearner library for outcome regression
-                           lib.A = lib.A, # superlearner library for propensity score
-
-                           formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                           linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                           n.iter = n.iter, cvg.criteria = cvg.criteria,
-                           truncate_lower = truncate_lower, truncate_upper = truncate_upper,zerodiv.avoid=zerodiv.avoid)
-
-      out.a0 <- NPS.TMLE.a(a = a[2], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
-
-                           superlearner.seq = superlearner.seq, # whether run superlearner for sequential regression
-                           superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                           superlearner.A = superlearner.A, # whether run superlearner for propensity score
-                           superlearner.M = superlearner.M, # whether run superlearner for estimating densratio for M using bayes method
-                           superlearner.L = superlearner.L, # whether run superlearner for estimating densratio for L using bayes method
-
-                           crossfit = crossfit, K = K,
-
-                           ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
-                           ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
-
-                           lib.seq = lib.seq, # superlearner library for sequential regression
-                           lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L
-                           lib.M = lib.M, # superlearner library for density ratio estimation via bayes rule for variables in M
-                           lib.Y = lib.Y, # superlearner library for outcome regression
-                           lib.A = lib.A, # superlearner library for propensity score
-
-                           formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                           linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                           n.iter = n.iter, cvg.criteria = cvg.criteria,
-                           truncate_lower = truncate_lower, truncate_upper = truncate_upper,zerodiv.avoid=zerodiv.avoid)
-
-      ############################ TMLE ############################
-      # run TMLE
-      tmle_output_Y1 <- out.a1$TMLE
-      tmle_output_Y0 <- out.a0$TMLE
-
-      # estimate E[Y(1)], E[Y(0)], and ATE
-      hat_E.Y1 = tmle_output_Y1$estimated_psi
-      hat_E.Y0 = tmle_output_Y0$estimated_psi
-      hat_ATE = hat_E.Y1 - hat_E.Y0
-
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((tmle_output_Y1$EIF-tmle_output_Y0$EIF)^2)/n)
-
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((tmle_output_Y1$EIF-tmle_output_Y0$EIF)^2)/n)
-
-      tmle.out <- list(ATE=hat_ATE, # estimated parameter
-                       lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                       upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                       EIF=tmle_output_Y1$EIF-tmle_output_Y0$EIF # EIF
-      )
-
-
-      ############################ onestep ############################
-      # run onestep
-      onestep_output_Y1 <- out.a1$Onestep
-      onestep_output_Y0 <- out.a0$Onestep
-
-      # estimate E[Y(1)], E[Y(0)], and ATE
-      hat_E.Y1 = onestep_output_Y1$estimated_psi
-      hat_E.Y0 = onestep_output_Y0$estimated_psi
-      hat_ATE = hat_E.Y1 - hat_E.Y0
-
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((onestep_output_Y1$EIF-onestep_output_Y0$EIF)^2)/n)
-
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((onestep_output_Y1$EIF-onestep_output_Y0$EIF)^2)/n)
-
-      onestep.out <- list(ATE=hat_ATE, # estimated parameter
-                          lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                          upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                          EIF=onestep_output_Y1$EIF-onestep_output_Y0$EIF # EIF
-      )
-
-      cat(paste0("TMLE estimated ACE: ",round(tmle.out$ATE,2),"; 95% CI: (",round(tmle.out$lower.ci,2),", ",round(tmle.out$upper.ci,2),") \n","Onestep estimated ACE: ",round(onestep.out$ATE,2),"; 95% CI: (",round(onestep.out$lower.ci,2),", ",round(onestep.out$upper.ci,2),")"))
-
-      np.out <- list(TMLE=tmle.out,Onestep=onestep.out, TMLE.Y1=tmle_output_Y1, TMLE.Y0 = tmle_output_Y0, Onestep.Y1=onestep_output_Y1, Onestep.Y0=onestep_output_Y0)
-
-
-    }else if (length(a)==1) { ## E(Y^1) estimate ==
-
-      out.a <- NPS.TMLE.a(a = a, data = data, vertices = vertices,
-                          di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome,
-                          multivariate.variables = multivariate.variables, graph = graph,
-
-                          superlearner.seq = superlearner.seq, # whether run superlearner for sequential regression
-                          superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                          superlearner.A = superlearner.A, # whether run superlearner for propensity score
-                          superlearner.M = superlearner.M, # whether run superlearner for estimating densratio for M using bayes method
-                          superlearner.L = superlearner.L, # whether run superlearner for estimating densratio for L using bayes method
-
-                          crossfit = crossfit, K = K,
-
-                          ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
-                          ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
-
-                          lib.seq = lib.seq, # superlearner library for sequential regression
-                          lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L
-                          lib.M = lib.M, # superlearner library for density ratio estimation via bayes rule for variables in M
-                          lib.Y = lib.Y, # superlearner library for outcome regression
-                          lib.A = lib.A, # superlearner library for propensity score
-
-                          formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                          linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                          n.iter = n.iter, cvg.criteria = cvg.criteria,
-                          truncate_lower = truncate_lower, truncate_upper = truncate_upper, zerodiv.avoid=zerodiv.avoid)
-      np.out <- out.a
-
-    } # end of if else condition for testing the length of a
+                        n.iter = n.iter, cvg.criteria = cvg.criteria,
+                        truncate_lower = truncate_lower, truncate_upper = truncate_upper, zerodiv.avoid=zerodiv.avoid)
 
 
 
@@ -420,25 +187,25 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
   # NPS and semi-parametric model
   #####################################################
 
-  if (is.np.saturated(graph)){
+  if (suppressMessages(is.np.saturated(graph))){
 
-    print("The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimator.")
+    message("The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimator.")
 
     return(np.out)
 
-  }else if (is.mb.shielded(graph)){
+  }else if (suppressMessages(is.mb.shielded(graph))){
 
 
     #### ADD code for semi-parametric one step estimation ####
 
 
-    print("The graph is mb-shield. The semi.out contains the semi-parametric one-step estimator result, which in theory is the most efficient estimator. The np.out contains the non-parametric TMLE and one-step estimator results.")
+    message("The graph is mb-shield. The semi.out contains the semi-parametric one-step estimator result, which in theory is the most efficient estimator. The np.out contains the non-parametric TMLE and one-step estimator results.")
 
     return(list(np.out=np.out, semi.out=semi.out))
 
   }else{
 
-    print("Estimation provide via imposing NO independence constraints among variables. Note that there may be more efficient estimators.")
+    message("Estimation provide via imposing NO independence constraints among variables. Note that there may be more efficient estimators.")
 
     return(np.out)
 
