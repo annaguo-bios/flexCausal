@@ -7,7 +7,15 @@
 
     if (model=="cv"){ # code for force weight when fit is get from CV.SupearLearner
 
-      fit$coef <- rep(1, length(fit$coef))
+      K <- length(fit$coef) # number of folds
+
+      fit$coef <- rep(1, K)
+
+      for (i in 1:K){
+
+        v_fit$AllSL[[i]]$coef <- 1
+
+      }
 
     }else if (model=="sl"){ # code for force weight when fit is get from SupearLearner
 
