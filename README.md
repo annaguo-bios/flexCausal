@@ -12,6 +12,13 @@ Unmeasured Variables
 - [Functions for learning the properties of
   ADMG](#functions-for-learning-the-properties-of-admg)
 
+This branch is used for simulation purpose. The difference between this
+branch and the main branch is that in this simulation branch, if there
+is only one algorithm used in SuperLearner, then the algorithm is forced
+to get weight 1 whereas by default, the algorithm will get a weight of
+either 1 or 0. We forced the weight to be 1 such that in simulation-4 of
+the paper, the prediction is fully from the random forest algorithm.
+
 This package is built for estimating the Average Causal Effect (ACE) in
 graphical models with unmeasured variables. This package is an
 implementation of the proposed estimators by , based on the theory of
@@ -54,28 +61,26 @@ library(ADMGtmle) # load the package
 head(data_fig_4a) # take a glance of the data, which is a simulated dataset under above figure (a).
 ```
 
-    ##            X          U A        M1         M2          L         Y
-    ## 1 0.98890930  3.4036578 0 0.5423635 -1.6361458  0.7632388  3.257711
-    ## 2 0.39774545 -0.7055857 0 2.4330827 -0.6538274  3.9498004  5.338658
-    ## 3 0.11569778  1.0320105 1 4.5009622  2.0672577 11.4239744 19.819490
-    ## 4 0.06974868  1.6994103 1 2.8610542 -1.1488686  5.0942460 10.803918
-    ## 5 0.24374939  2.9995114 1 2.6677580 -1.1273291  3.2955105  8.205794
-    ## 6 0.79201043  2.9700555 1 3.3190450  3.5674934 10.1107529 21.442111
+    ##           X          U A      M.1         M.2        L        Y
+    ## 1 0.3101427  1.7731206 0 2.212362  0.82384893 6.504096 12.29970
+    ## 2 0.5258710  2.2863894 1 3.537888 -0.19437648 5.093739 12.80111
+    ## 3 0.8761728  3.8538852 1 3.482861  2.62160109 8.523622 20.74587
+    ## 4 0.5238235  3.3955992 1 4.358015  0.09736324 6.749402 16.21100
+    ## 5 0.6814022 -0.2004696 0 1.492628  3.47722466 5.169072 11.72904
+    ## 6 0.4586764  1.2511704 1 4.754302  0.69655182 8.015109 17.11876
 
 ``` r
 est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 bi_edges=list(c('A','Y')),
                 di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
                 treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')))
+                multivariate.variables = list(M=c('M.1','M.2')))
 ```
 
+    ## [1] "The treatment is not fixable in the provided graph."
     ## [1] "The treatment is primal fixable in the provided graph."
-    ## [1] "The graph is nonparametrically saturated."
-    ## [1] -3.013461e-15
-    ## [1] 2.598485e-15
-    ## TMLE estimated ACE: 1.83; 95% CI: (0.7, 2.97) 
-    ## Onestep estimated ACE: 1.81; 95% CI: (0.65, 2.96)
+    ## TMLE estimated ACE: 1.94; 95% CI: (1.31, 2.57) 
+    ## Onestep estimated ACE: 1.94; 95% CI: (1.32, 2.56)
 
 The code above estimates the ACE of treatment $A$ on outcome $Y$,
 defined as $E(Y^1)-E(Y^0)$, using the data `data_fig_4a` generated based
