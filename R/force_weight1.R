@@ -13,7 +13,7 @@
 
       for (i in 1:K){
 
-        v_fit$AllSL[[i]]$coef <- 1
+        fit$AllSL[[i]]$coef <- 1
 
       }
 
