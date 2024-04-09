@@ -671,7 +671,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         if (crossfit==T){
 
-          bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.L, control = list(saveFitLibrary=T),saveAll = T)
+          bayes_fit <- CV.SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), V = K, SL.library = lib.M, control = list(saveFitLibrary=T),saveAll = T)
 
           # p(A=1|mp(v)\A,v)
           p.A1.mpv <- bayes_fit$SL.predict
@@ -691,7 +691,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else if (superlearner.M==T){
 
-          bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+          bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.M)
 
           # p(A=1|mp(v)\A,v)
           p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
@@ -826,7 +826,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       }else if (superlearner.M==T){
 
         # fit p(A|mp(v)\A,v)
-        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.L)
+        bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.M)
 
 
         # p(A=1|mp(v)\A,v)
@@ -856,7 +856,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         }else{
 
-          bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.L)
+          bayes_fit_v <- SuperLearner(Y=A, X=dat_bayes.v_v, family = binomial(), SL.library = lib.M)
 
           # p(A=1|mp(v)\A)
           p.A1.mpv_v <- predict(bayes_fit_v, type = "response")[[1]] %>% as.vector()  # p(A=1|X)
