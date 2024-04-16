@@ -93,6 +93,6 @@ Function for estimating the average counterfactual outcome E(Y(a)) via backdoor 
 \examples{
 # E(Y(1)) estimation.
 backdoor.TMLE.a(a=1,data=data_backdoor, vertices=c('A','Y','X'),
-bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','Y'), c('A','Y')),
+di_edges=list(c('X','A'), c('X','Y'), c('A','Y')),
 treatment='A', outcome='Y')
 }
