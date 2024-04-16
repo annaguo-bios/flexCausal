@@ -175,7 +175,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
   if (crossfit==T){ #### cross fitting + super learner #####
 
-    fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
+    fit.family <- if(all(Y %in% c(0,1))){binomial(linkY_binary)}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
 
     or_fit <- CV.SuperLearner(Y=Y, X=dat_mpY, family = fit.family, V = K, SL.library = lib.Y, control = list(saveFitLibrary=T),saveAll = T)
 
@@ -187,7 +187,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
   } else if (superlearner.Y==T){ #### super learner #####
 
-    fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
+    fit.family <- if(all(Y %in% c(0,1))){binomial(linkY_binary)}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
 
     or_fit <- SuperLearner(Y=Y, X=dat_mpY, family = fit.family, SL.library = lib.Y)
 
@@ -198,7 +198,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
   } else { #### simple linear regression with user input regression formula: default="Y ~ ." ####
 
-    fit.family <- if(all(Y %in% c(0,1))){binomial()}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
+    fit.family <- if(all(Y %in% c(0,1))){binomial(linkY_binary)}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
 
     or_fit <- glm(as.formula(formulaY), data=dat_mpY, family = fit.family)
 
@@ -231,7 +231,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     if (crossfit==T){ #### cross fitting + super learner #####
 
       # fit model
-      ps_fit <- CV.SuperLearner(Y=A, X=dat_mpA, family = binomial(), V = K, SL.library = lib.A, control = list(saveFitLibrary=T),saveAll = T)
+      ps_fit <- CV.SuperLearner(Y=A, X=dat_mpA, family = binomial(linkA), V = K, SL.library = lib.A, control = list(saveFitLibrary=T),saveAll = T)
 
       ps_fit <- .force_weight(ps_fit, model="cv", lib=lib.A) # force weight to be 1 for the one algorithm
 
@@ -241,7 +241,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     } else if (superlearner.A==T){ #### super learner #####
 
       # fit model
-      ps_fit <- SuperLearner(Y=A, X=dat_mpA, family = binomial(), SL.library = lib.A)
+      ps_fit <- SuperLearner(Y=A, X=dat_mpA, family = binomial(linkA), SL.library = lib.A)
 
       ps_fit <- .force_weight(ps_fit, model="sl", lib=lib.A) # force weight to be 1 for the one algorithm
 
@@ -250,13 +250,26 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     } else { # without weak overlapping issue. Run A~X via logistic regression
 
+      if (truncate_lower!=0 | truncate_upper!=1){
+
         # fit model
-        ps_fit <- glm(as.formula(formulaA), data=dat_mpA,  family = binomial())
+        ps_fit <- lm(as.formula(formulaA), data=dat_mpA)
+
+        # make prediction: p(A=1|mp(A))
+        p.A1.mpA <- predict(ps_fit)  # p(A=1|X)
+
+      }else{
+
+        # fit model
+        ps_fit <- glm(as.formula(formulaA), data=dat_mpA,  family = binomial(linkA))
 
         # make prediction: p(A=1|mp(A))
         p.A1.mpA <- predict(ps_fit, type = "response")  # p(A=1|X)
-
       }
+
+    }
+
+
     }
 
  # end of if (length(mpA)==0)
