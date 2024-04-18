@@ -440,18 +440,48 @@ f.district <- function(graph, node){
 
   connected_nodes <- c(node)
 
-  for (edge in bi_edges) { # iterate over all bidirected edges
+  # Recursively find descendants
+  find_district <- function(nodes) {
 
-    if (node %in% edge) { # find out whether the given node is in this bidirected edge
-      connected_nodes <- c(connected_nodes, edge[edge != node])
+    if (length(nodes) == 0) {
+
+      return(NULL)
+
     }
 
+    new_connected_nodes <- c() # Initialize a new set of connected nodes
+
+    for (node in nodes){
+
+      for (edge in bi_edges) { # iterate over all bidirected edges
+
+        if (node %in% edge) { # find out whether the given node is in this bidirected edge
+
+          if (!(edge[edge!=node] %in% connected_nodes)){ # the new node is not yet in the connected nodes set
+
+            new_connected_nodes <- c(new_connected_nodes, edge[edge != node])
+
+          }
+
+
+
+        }
+
+      }
+
+    }
+
+    new_connected_nodes <- unique(new_connected_nodes)
+
+    connected_nodes <<- union(connected_nodes, new_connected_nodes) # update connected_nodes in the global environment
+
+    find_district(new_connected_nodes)  # Recursively find district of the new nodes
   }
 
-  return(unique(connected_nodes))
+  # Start the recursive search
+  find_district(node)
 
-
-
+  return(connected_nodes)
 }
 
 #################################################
@@ -608,7 +638,7 @@ is.p.fix <- function(graph, treatment){
 
     if (list(c(treatment, child)) %in% bi_edges || list(c(child, treatment)) %in% bi_edges) {
 
-      message("The treatment is not primal fixable in the provided graph.")
+      print("The treatment is not primal fixable in the provided graph.")
 
       return(FALSE)  # Bidirected edge found between node and child
     }
@@ -664,7 +694,7 @@ is.fix <- function(graph, treatment){
 
   }
 
-  message("The treatment is fixable in the provided graph.")
+  print("The treatment is primal fixable in the provided graph.")
   return(TRUE)  # No bidirected edge found between node and any descendant
 
 
@@ -836,8 +866,8 @@ is.np.saturated <- function(graph) {
 
     if (!(V1 %in% f.parents(graph, f.district(f.reachable_closure(graph,V2)[[3]], V2))) &&  (cnt.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)){
 
-      print("The graph is not nonparametrically saturated.")
-      print(c(V1,V2))
+      message("The graph is not nonparametrically saturated.")
+      # print(c(V1,V2))
       return(FALSE)
 
     } # end of if statement
@@ -885,7 +915,7 @@ is.mb.shielded <- function(graph) {
 
       if (Vi %in% f.markov_blanket(graph, Vj) || Vj %in% f.markov_blanket(graph, Vi)) { # Vi is in the Markov blanket of Vj or Vj is in the Markov blanket of Vi
 
-        print("The graph is not mb-shield.")
+        message("The graph is not mb-shield.")
 
         return(FALSE)
 
