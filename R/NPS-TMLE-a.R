@@ -70,7 +70,13 @@
 #' bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','M'),
 #' c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
 #' treatment='A', outcome='Y', multivariate.variables = list(M=c('M.1','M.2')))
-#' @import dplyr MASS densratio SuperLearner mvtnorm stats itertools utils
+#' @importFrom dplyr %>% mutate select
+#' @importFrom MASS mvrnorm
+#' @importFrom SuperLearner CV.SuperLearner SuperLearner
+#' @importFrom mvtnorm dmvnorm
+#' @importFrom densratio densratio
+#' @importFrom utils combn
+#' @importFrom stats rnorm runif rbinom dnorm dbinom binomial gaussian predict glm as.formula qlogis plogis lm coef cov sd
 #' @export
 #'
 #'
