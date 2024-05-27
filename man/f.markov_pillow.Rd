@@ -19,7 +19,7 @@ A vector of vertices that is in the Markov pillow of the given vertex.
 \description{
 Function to get the Markov pillow of a vertex in a graph object.
 Markov pillow of a vertex Vi is the subset of the Markov blanket of Vi that proceed Vi in the topological ordering of the graph.
-Mp= {Vj in union(district(Vi), parents(district(Vi))): Vj proceed Vi}. THIS IS PSUEDO CODE.
+Mp= \verb{\{\{Vj in union(district(Vi), parents(district(Vi))): Vj proceed Vi\}\}}. THIS IS PSUEDO CODE.
 }
 \examples{
 graph <- make.graph(vertices=c('A','M','L','Y','X'),

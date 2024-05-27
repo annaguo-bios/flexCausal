@@ -310,6 +310,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       ## Estimate the denomator via bays rule to avoid zero division error
       # used for estimating the denominator of the density ratio
       dat_bayes.v <- data[, setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables), treatment), drop=F]
+      names(dat_bayes.v)[names(dat_bayes.v)=="Y"] <- "outcome" # Super Learner get confused of the regresor contains a variable named Y. Thus rename it to outcome
 
       if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
@@ -423,6 +424,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
       #### Prepare data for regression and prediction ####
       dat_bayes.v <- data[,setdiff( replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
+      names(dat_bayes.v)[names(dat_bayes.v)=="Y"] <- "outcome" # Super Learner get confused of the regresor contains a variable named Y. Thus rename it to outcome
+
       dat_bayes.v_v <- data[,setdiff( replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), drop=F] # contains variable Markov pillow of v - treatment
 
       #### Fit nuisance models ####
@@ -662,6 +665,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
       ## Estimator the denomator via bayes rule to avoid zero division
       # used for estimating the denominator of the density ratio
       dat_bayes.v <- data[, setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables), treatment), drop=F]
+      names(dat_bayes.v)[names(dat_bayes.v)=="Y"] <- "outcome" # Super Learner get confused of the regresor contains a variable named Y. Thus rename it to outcome
 
       if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
@@ -776,6 +780,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
       #### Prepare data for regression and prediction ####
       dat_bayes.v <- data[,setdiff(replace.vector(c(v, f.markov_pillow(graph, v, treatment)), multivariate.variables) ,treatment), drop=F] # contains variable v + Markov pillow of v - treatment
+      names(dat_bayes.v)[names(dat_bayes.v)=="Y"] <- "outcome" # Super Learner get confused of the regresor contains a variable named Y. Thus rename it to outcome
+
       dat_bayes.v_v <- data[,setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), drop=F] # contains variable Markov pillow of v - treatment
 
       #### Fit nuisance models ####
@@ -833,7 +839,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
         # fit p(A|mp(v)\A,v)
         bayes_fit <- SuperLearner(Y=A, X=dat_bayes.v, family = binomial(), SL.library = lib.M)
-
 
         # p(A=1|mp(v)\A,v)
         p.A1.mpv <- predict(bayes_fit, type = "response")[[1]] %>% as.vector()  # p(A=1|X)

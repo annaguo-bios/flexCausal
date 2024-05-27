@@ -19,7 +19,7 @@ A list with the following two components:
 Function to count the number of districts in a graph object.
 Number of districts in a graph is the number of bidirected connected components in the graph.
 A vertex that is not bidirected connected to any other vertex is also considered as a district by convention.
-For example, a graph like A B <-> C has two districts: {A, B} and {C}.
+For example, a graph like A B <-> C has two districts: \verb{\{\{A, B\}\}} and \code{{{C}}}.
 }
 \keyword{ADMG}
 \keyword{district}
