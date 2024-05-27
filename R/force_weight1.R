@@ -30,6 +30,45 @@
 
 
 
+  if (length(lib)>=1){ # if there are more than one learner, and the coefficient for all learners are 0
+
+
+
+
+    if (model=="cv"){ # code for force weight when fit is get from CV.SupearLearner
+
+      K <- nrow(fit$coef) # number of folds
+      n.learners <- ncol(fit$coef) # number of learners
+
+
+      for (i in 1:K){
+
+        if (sum(fit$AllSL[[i]]$coef)==0){ # if the coefficient for all learners are 0, then force equal weights to all learners
+
+          fit$AllSL[[i]]$coef <- rep(1/n.learners,n.learners)
+          fit$coef[i,] <- rep(1/n.learners,n.learners)
+
+        }
+
+
+
+      }
+
+    }else if (model=="sl" & sum(fit$coef)==0){ # code for force weight when fit is get from SupearLearner
+
+      n.learners <- length(lib) # number of learners
+
+      fit$coef <- rep(1/n.learners,n.learners)
+
+    }
+
+
+
+
+  } # only force weight to be one if there is only one algorithm in lib
+
+
+
   return(fit)
 
 }
