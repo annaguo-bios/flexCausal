@@ -4,6 +4,7 @@
                       superlearner.seq, superlearner.Y, superlearner.A, superlearner.M, superlearner.L,
                       crossfit, K,
                       ratio.method.L, ratio.method.M,
+                      dnorm.formula.L, dnorm.formula.M,
                       lib.seq, lib.L, lib.M, lib.Y, lib.A,
                       formulaY, formulaA,
                       linkY_binary, linkA,
@@ -38,6 +39,9 @@
                          ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
                          ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
 
+                         dnorm.formula.L = dnorm.formula.L, # formula for estimating the density ratio associated with M
+                         dnorm.formula.M = dnorm.formula.M, # formula for estimating the density ratio associated with L
+
                          lib.seq = lib.seq, # superlearner library for sequential regression
                          lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L
                          lib.M = lib.M, # superlearner library for density ratio estimation via bayes rule for variables in M
@@ -62,6 +66,9 @@
 
                          ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
                          ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
+
+                         dnorm.formula.L = dnorm.formula.L, # formula for estimating the density ratio associated with M
+                         dnorm.formula.M = dnorm.formula.M, # formula for estimating the density ratio associated with L
 
                          lib.seq = lib.seq, # superlearner library for sequential regression
                          lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L

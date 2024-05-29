@@ -35,6 +35,14 @@
 #' @param ratio.method.M A character string indicating the method used to estimate the density ratio associated with M. There are three options: 'bayes', 'dnorm', and 'densratio'.
 #' The default is 'bayes'. The "bayes" method estimates the density ratio \eqn{p(M|...,A=a0)/p(M|...,A=a1)} by rewriting it as \eqn{(p(a0|M,...)/p(a1|M,...))/(p(a0|...)/p(a1|...))}.
 #' Here \eqn{p(a0|M,...)} and \eqn{p(a0|...)} are estimated via linear regression if `superlearner.M=F` and via superlearner if `superlearner.M=T`.
+#' @param dnorm.formula.L A list of regression formulas specifying the relationship between L and its Markov pillow when the `ratio.method.L="dnorm"`. If not specified, the function will fit a linear regression model L ~ . .
+#' If L is a multivariate variable, the formula should be a list with the names of the variables in L as the names of the list and the regression formula as the values.
+#' For example, if L is a multivariate variable with two components L.1 and L.2, the formula can be specified as list(L.1 = "L.1 ~ A + X + M", L.2 = "L.2 ~ A + X + I(M^2)").
+#' We can also only specify regression for some of the variables in L. For example, if we only want to specify regression for L.1, the formula can be specified as list(L.1 = "L.1 ~ A + X").
+#' @param dnorm.formula.M A list of regression formulas specifying the relationship between M and its Markov pillow when the `ratio.method.M="dnorm"`. If not specified, the function will fit a linear regression model M ~ . .
+#' If M is a multivariate variable, the formula should be a list with the names of the variables in M as the names of the list and the regression formula as the values.
+#' For example, if M is a multivariate variable with two components M.1 and M.2, the formula can be specified as list(M.1 = "M.1 ~ A + X", M.2 = "M.2 ~ A + X").
+#' We can also only specify regression for some of the variables in M. For example, if we only want to specify regression for M.1, the formula can be specified as list(M.1 = "M.1 ~ A + X").
 #' @param lib.seq A character vector specifying the library of algorithms to be used in the SuperLearner for sequential regression.
 #' @param lib.L A character vector specifying the library of algorithms to be used in the SuperLearner for estimating the density ratio associated with L.
 #' @param lib.M A character vector specifying the library of algorithms to be used in the SuperLearner for estimating the density ratio associated with M.
@@ -89,6 +97,8 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
                  crossfit=F, K=5,
                  ratio.method.L="bayes", # method for estimating the density ratio associated with M
                  ratio.method.M="bayes", # method for estimating the density ratio associated with L
+                 dnorm.formula.L=NULL, # formula for the density ratio associated with L
+                 dnorm.formula.M=NULL, # formula for the density ratio associated with M
                  lib.seq = c("SL.glm","SL.earth","SL.ranger","SL.mean"), # superlearner library for sequential regression
                  lib.L = c("SL.glm","SL.earth","SL.ranger","SL.mean"), # superlearner library for density ratio estimation via bayes rule for variables in L
                  lib.M = c("SL.glm","SL.earth","SL.ranger","SL.mean"), # superlearner library for density ratio estimation via bayes rule for variables in M
@@ -160,6 +170,9 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
 
                         ratio.method.L = ratio.method.L, # method for estimating the density ratio associated with M
                         ratio.method.M = ratio.method.M, # method for estimating the density ratio associated with L
+
+                        dnorm.formula.L = dnorm.formula.L, # formula for the density ratio associated with L
+                        dnorm.formula.M = dnorm.formula.M, # formula for the density ratio associated with M
 
                         lib.seq = lib.seq, # superlearner library for sequential regression
                         lib.L = lib.L, # superlearner library for density ratio estimation via bayes rule for variables in L

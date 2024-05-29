@@ -6,6 +6,7 @@
 #' @param graph A graph object created by \code{\link{make.graph}}.
 #' @param treatment A character string indicating the name of the treatment variable A.
 #' @param data A data frame containing the data.
+#' @param formula A regression formula specifying the relationship between M or L and its Markov pillow. See the description for `ADMGtmle()` for more details.
 #' @keywords graph density ratio
 #' @return A vector of density ratios for each row of the data.
 #' @export
@@ -19,7 +20,7 @@
 #' ratio <- calculate_density_ratio_dnorm(a0=0, "M", graph, treatment="A", data=data_fig_4a)
 #' head(ratio)
 #'
-calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is a vector, M and X are data frame
+calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data, formula=NULL){ # A is a vector, M and X are data frame
 
   # This function only allow M to be either univariate binary / continuous
   # or multivariate continuous.
@@ -41,11 +42,16 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
 
 
   # prediction data
-  data.a0 <- data[, mp] %>%
-    mutate(!!treatment := a0)
+  data.a0 <- data[, mp] %>% mutate(!!treatment := a0)
 
-  data.a1 <- data[, mp] %>%
-    mutate(!!treatment := (1-a0))
+  data.a1 <- data[, mp] %>% mutate(!!treatment := (1-a0))
+
+  # for which variables, user specified formula for regression
+  if (!is.null(formula)){
+    formula.variables <- names(formula)
+  }else{
+    formula.variables <- c()
+  }
 
 
   if (M %in% names(multivariate.variables)){ ## if M is multivariate ##
@@ -65,20 +71,28 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
 
     ## Fit regression model to each component of M ##
 
-    # Initialize an empty matrix to store the fitted coefficients
-    fit.parM <- matrix(NA, nrow = num_columns, ncol = 1+length(mp)) # ncol: 1 for the intercept + number of variables in markov pillow
+    # model prediction
+    predict.M.a0 <- list() # store the prediction results for each variable in M under A=a0
+    predict.M.a1 <- list() # store the prediction results for each variable in M under A=a1
+
     # currently only support linear models
 
     # Initialize vectors to store errors
     model_errors <- matrix(NA, nrow = num_rows, ncol = num_columns)
 
-    for (i in 1:num_columns){
+    for (i in 1:num_columns){ # loop over each variable in M
 
-      model <- lm(data[, variables[i]] ~ . , data=data[, mp])
+      if (variables[i] %in% formula.variables){ # if the user specified formula for this variable
+        model <- lm(as.formula(formula[[variables[i]]]), data=data[, c(variables[i],mp)])
 
-      fit.parM[i, ] <- coef(model)
+      }else{ # if the user didn't specify formula for this variable
+        model <- lm(data[, variables[i]] ~ . , data=data[, mp])
+      }
 
-      model_errors[, i] <- data[, variables[i]] - predict(model)
+      model_errors[, i] <- data[, variables[i]] - predict(model) # errors of the model
+
+      predict.M.a0[[variables[i]]] <- predict(model, newdata=data.a0) # store the prediction result for A=a0
+      predict.M.a1[[variables[i]]] <- predict(model, newdata=data.a1) # store the prediction result for A=a1
 
     } # end of for loop over variables
 
@@ -86,18 +100,18 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
     varcov <- cov(data.frame(model_errors))
 
     # Define a function for the ratio calculation
-    # Define a function for the ratio calculation
     f.m.ratio.a <- function(j) {
+
+      mean.a0 <- sapply(predict.M.a0, `[`, j) # mean of the normal distribution for A=a0
+      mean.a1 <- sapply(predict.M.a1, `[`, j) # mean of the normal distribution for A=a1
 
       dmvnorm(
         x = data[j, variables],
-        mean = rowSums(cbind(fit.parM[,1], # intercept
-                             fit.parM[,2:ncol(fit.parM)] %*% as.vector(t(data.a0[j,])))), # coeff*mp
+        mean = mean.a0, # coeff*mp
         sigma = varcov
       ) / dmvnorm(
         x = data[j, variables],
-        mean = rowSums(cbind(fit.parM[,1], # intercept
-                             fit.parM[,2:ncol(fit.parM)] %*% as.vector(t(data.a1[j,])))), # coeff*mp
+        mean = mean.a1, # coeff*mp
         sigma = varcov
       )
     }
@@ -113,7 +127,12 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
     if (all(data[, M] %in% c(0,1))) { # binary variable
 
       # For binary columns, use glm
-      model <- glm(data[, M] ~ . , data=data[, mp])
+
+      if (M %in% formula.variables){ # if the user specified formula for this variable
+        model <- glm(formula[[M]], data=data[, c(mp,M)])
+      }else{
+        model <- glm(data[, M] ~ . , data=data[, mp])
+      }
 
       # calculate the density ratio
       ratio <- predict(model, newdata=data.a0, type="response") / predict(model, newdata=data.a1, type="response")
@@ -123,16 +142,21 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data){ # A is
       # For continuous columns, use lm
       var <- data[, M]
 
-      model <- lm( var ~ . , data=data[, mp])
+      if (M %in% formula.variables){ # if the user specified formula for this variable
+        model <- lm(as.formula(formula[[M]]), data=data[, c(mp,M)])
 
-      # model coefficients
-      fit.parM <- coef(model)
+      }else{
+        model <- lm( var ~ . , data=data[, mp])}
+
+      # model prediction
+      predict.M.a0 <- predict(model, newdata=data.a0) # store the prediction result for A=a0
+      predict.M.a1 <- predict(model, newdata=data.a1) # store the prediction result for A=a1
 
       # Store model errors
       model_errors <- data[, M] - predict(model)
 
-      ratio <- dnorm(as.vector(data[,M]), mean = fit.parM[1] +  as.matrix(data.a0[,mp]) %*% fit.parM[2:length(fit.parM)], sd = sd(model_errors))/
-        dnorm(as.vector(data[,M]), mean = fit.parM[1] +  as.matrix(data.a1[,mp]) %*% fit.parM[2:length(fit.parM)], sd = sd(model_errors))
+      ratio <- dnorm(as.vector(data[,M]), mean = predict.M.a0, sd = sd(model_errors))/
+        dnorm(as.vector(data[,M]), mean = predict.M.a1, sd = sd(model_errors))
 
     } # end of if-else
 
