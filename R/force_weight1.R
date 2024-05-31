@@ -30,7 +30,7 @@
 
 
 
-  if (length(lib)>=1){ # if there are more than one learner, and the coefficient for all learners are 0
+  if (length(lib)>1){ # if there are more than one learner, and the coefficient for all learners are 0
 
 
 
