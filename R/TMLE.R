@@ -186,17 +186,13 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
       hat_E.Y0 = gcomp_output_Y0$estimated_psi
       hat_ATE = hat_E.Y1 - hat_E.Y0
 
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
+      # # lower CI
+      # lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
+      #
+      # # upper CI
+      # upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
 
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
-
-      gcomp.out <- list(ATE=hat_ATE, # estimated parameter
-                        lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                        upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                        EIF=gcomp_output_Y1$EIF-gcomp_output_Y0$EIF # EIF
-      )
+      gcomp.out <- ATE=hat_ATE # estimated parameter
 
       ############################ ipw ############################
       # run ipw
@@ -208,21 +204,17 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
       hat_E.Y0 = ipw_output_Y0$estimated_psi
       hat_ATE = hat_E.Y1 - hat_E.Y0
 
-      # lower CI
-      lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
+      # # lower CI
+      # lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
+      #
+      # # upper CI
+      # upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
 
-      # upper CI
-      upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
-
-      ipw.out <- list(ATE=hat_ATE, # estimated parameter
-                      lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                      upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                      EIF=ipw_output_Y1$EIF-ipw_output_Y0$EIF # EIF
-      )
+      ipw.out <- ATE=hat_ATE # estimated parameter
 
       cat(paste0("AIPW estimated ACE: ",round(aipw.out$ATE,2),"; 95% CI: (",round(aipw.out$lower.ci,2),", ",round(aipw.out$upper.ci,2),") \n",
-                 "IPW estimated ACE: ",round(ipw.out$ATE,2),"; 95% CI: (",round(ipw.out$lower.ci,2),", ",round(ipw.out$upper.ci,2),") \n",
-                 "G-comp estimated ACE: ",round(gcomp.out$ATE,2),"; 95% CI: (",round(gcomp.out$lower.ci,2),", ",round(gcomp.out$upper.ci,2),")"))
+                 "IPW estimated ACE: ",round(ipw.out$ATE,2),"; 95% CI needs to be calculated via bootstrap \n",
+                 "G-comp estimated ACE: ",round(gcomp.out$ATE,2),"; 95% CI needs to be calculated via bootstrap."))
 
       np.out <- list(AIPW=aipw.out, IPW=ipw.out, Gcomp=gcomp.out,
                      AIPW_Y1 = aipw_output_Y1, AIPW_Y0 = aipw_output_Y0, Gcomp_Y1 = gcomp_output_Y1,
