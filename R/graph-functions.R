@@ -860,11 +860,12 @@ is.np.saturated <- function(graph) {
 
     # 1. V1 is not in the parents set of Di for all Di in D, where D is the district of V2 in conditional acyclic directed mixed graphs (CADMG) obtained by recursively fixing as many vertices as possible in V/V2
     # AND 2. The CADMG obtained by recursively fixing as many vertices as possible in V/{Vi, Vj} has more than one district.
+    # Note that the fixed variables do not count towards the number of districts.
 
     # (cnt.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)
     # !(V1 %in% f.district(f.reachable_closure(graph,c(V1,V2))[[3]], V2))
 
-    if (!(V1 %in% f.parents(graph, f.district(f.reachable_closure(graph,V2)[[3]], V2))) &&  (cnt.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts > 1)){
+    if (!(V1 %in% f.parents(graph, f.district(f.reachable_closure(graph,V2)[[3]], V2))) &&  (cnt.districts(f.reachable_closure(graph,c(Vi,Vj))[[3]])$n.districts - length(f.reachable_closure(graph,c(Vi,Vj))[[2]]) > 1)){
 
       message("The graph is not nonparametrically saturated.")
       # print(c(V1,V2))

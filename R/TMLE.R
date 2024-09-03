@@ -421,38 +421,23 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
 
 
 
-
   #####################################################
   # NPS and semi-parametric model
   #####################################################
 
-  if (is.np.saturated(graph)){
+  if (suppressMessages(is.np.saturated(graph))){
 
-    print("The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimator.")
-
-    return(np.out)
-
-  }else if (is.mb.shielded(graph)){
-
-
-    #### ADD code for semi-parametric one step estimation ####
-
-
-    print("The graph is mb-shield. The semi.out contains the semi-parametric one-step estimator result, which in theory is the most efficient estimator. The np.out contains the non-parametric TMLE and one-step estimator results.")
-
-    return(list(np.out=np.out, semi.out=semi.out))
+    message("The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimators.")
 
   }else{
 
-    print("Estimation provide via imposing NO independence constraints among variables. Note that there may be more efficient estimators.")
-
-    return(np.out)
+    message("The graph is NOT nonparametrically saturated. Note that there may be more efficient estimators.")
 
   }
 
 
 
-
+  return(np.out)
 
 
 
