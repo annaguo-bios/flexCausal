@@ -210,13 +210,13 @@ backdoor.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_ed
   ## G-comp
   gcomp <- mean(mu.Y_a0)
 
-  # confidence interval
-  lower.ci <- gcomp-1.96*sqrt(mean(EIF^2)/nrow(data))
-  upper.ci <- gcomp+1.96*sqrt(mean(EIF^2)/nrow(data))
+  # # confidence interval
+  # lower.ci <- gcomp-1.96*sqrt(mean(EIF^2)/nrow(data))
+  # upper.ci <- gcomp+1.96*sqrt(mean(EIF^2)/nrow(data))
 
   gcomp <- list(estimated_psi=gcomp, # estimated parameter
-               lower.ci=lower.ci, # lower bound of 95% CI
-               upper.ci=upper.ci, # upper bound of 95% CI
+               # lower.ci=lower.ci, # lower bound of 95% CI
+               # upper.ci=upper.ci, # upper bound of 95% CI
                EIF=EIF, # E(Dstar) for Y|M,A,X and M|A,X, and A|X
                mu.Y_a = mu.Y_a0 # estimated E[Y|A=a0,mp(A)]
   )
@@ -225,12 +225,12 @@ backdoor.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_ed
   ipw <- mean((A==a0)*Y/p.a0.mpA)
 
   # confidence interval
-  lower.ci <- ipw-1.96*sqrt(mean(EIF^2)/nrow(data))
-  upper.ci <- ipw+1.96*sqrt(mean(EIF^2)/nrow(data))
+  # lower.ci <- ipw-1.96*sqrt(mean(EIF^2)/nrow(data))
+  # upper.ci <- ipw+1.96*sqrt(mean(EIF^2)/nrow(data))
 
   ipw <- list(estimated_psi=ipw, # estimated parameter
-                lower.ci=lower.ci, # lower bound of 95% CI
-                upper.ci=upper.ci, # upper bound of 95% CI
+                # lower.ci=lower.ci, # lower bound of 95% CI
+                # upper.ci=upper.ci, # upper bound of 95% CI
                 EIF=EIF, # E(Dstar) for Y|M,A,X and M|A,X, and A|X
                 p.a.mpA = p.a0.mpA # estimated E[A=a1|mp(A)]
   )
