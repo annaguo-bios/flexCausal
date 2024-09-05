@@ -38,11 +38,11 @@ To install, run the following code in terminal:
 
 ``` bash
 # install the devtools package first if it's not yet installed
-devtools::install_github("annaguo-bios/ADMGtmle")
+devtools::install_github("annaguo-bios/flexCausal")
 ```
 
-The source code for `ADMGtmle` package is available on GitHub at
-[ADMEtmle](https://github.com/annaguo-bios/ADMGtmle/tree/main).
+The source code for `flexCausal` package is available on GitHub at
+[flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
 ## Quick Start
 
@@ -52,7 +52,7 @@ estimator in graphical models with unmeasured variables. To get a flavor
 of how to use this package, we provide a quick example below:
 
 ``` r
-library(ADMGtmle) # load the package
+library(flexCausal) # load the package
 head(data_fig_4a) # take a glance of the data, which is a simulated dataset under above figure (a).
 ```
 
