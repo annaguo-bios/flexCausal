@@ -30,7 +30,7 @@ To install, run the following code in terminal:
 devtools::install_github("annaguo-bios/flexCausal")
 ```
 
-The source code for `ADMGtmle` package is available on GitHub at [ADMEtmle](https://github.com/annaguo-bios/ADMGtmle/tree/main).
+The source code for `flexCausal` package is available on GitHub at [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
 ## Quick Start
 The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both TMLE esetimator and onestep estimator in graphical models with unmeasured variables. To get a flavor of how to use this package, we provide a quick example below:
