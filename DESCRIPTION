@@ -23,5 +23,6 @@ Depends:
 LazyData: true
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    flexCausal
 VignetteBuilder: knitr

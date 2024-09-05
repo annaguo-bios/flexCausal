@@ -6,9 +6,11 @@ output:
     number_sections: false
 ---
 
-This branch is used for simulation purpose. The difference between this branch and the main branch is that in this simulation branch, if there is only one algorithm used in SuperLearner, then the algorithm is forced to get weight 1 whereas by default, the algorithm will get a weight of either 1 or 0. We forced the weight to be 1 such that in simulation-4 of the paper, the prediction is fully from the random forest algorithm.
-
 This package is built for estimating the Average Causal Effect (ACE) in graphical models with unmeasured variables. This package is an implementation of the proposed estimators by \red{XXX}, based on the theory of influence functions and targeted minimum loss based estimation (TMLE).
+
+
+![](pkg.jpg)
+
 
 
 If you find this package useful, please cite:
@@ -25,17 +27,16 @@ To install, run the following code in terminal:
 
 ```{bash, eval = FALSE}
 # install the devtools package first if it's not yet installed
-devtools::install_github("annaguo-bios/ADMGtmle")
+devtools::install_github("annaguo-bios/flexCausal")
 ```
 
-The source code for `ADMGtmle` package is available on GitHub at [ADMEtmle](https://github.com/annaguo-bios/ADMGtmle/tree/main).
+The source code for `flexCausal` package is available on GitHub at [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
 ## Quick Start
 The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both TMLE esetimator and onestep estimator in graphical models with unmeasured variables. To get a flavor of how to use this package, we provide a quick example below:
 
 ```{r, quick-start, warning=F, message=F}
-
-library(ADMGtmle) # load the package
+library(flexCausal) # load the package
 head(data_fig_4a) # take a glance of the data, which is a simulated dataset under above figure (a).
 
 est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
