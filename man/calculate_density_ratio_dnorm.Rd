@@ -4,7 +4,7 @@
 \alias{calculate_density_ratio_dnorm}
 \title{Calculate the density ratio of M given its Markov pillow at treatment level a0 verse a1.}
 \usage{
-calculate_density_ratio_dnorm(a0, M, graph, treatment, data)
+calculate_density_ratio_dnorm(a0, M, graph, treatment, data, formula = NULL)
 }
 \arguments{
 \item{a0}{A numeric value indicating the treatment level. The density ratio is calculated at this level verse level 1-a0.}
@@ -16,6 +16,8 @@ calculate_density_ratio_dnorm(a0, M, graph, treatment, data)
 \item{treatment}{A character string indicating the name of the treatment variable A.}
 
 \item{data}{A data frame containing the data.}
+
+\item{formula}{A regression formula specifying the relationship between M or L and its Markov pillow. See the description for \code{ADMGtmle()} for more details.}
 }
 \value{
 A vector of density ratios for each row of the data.
