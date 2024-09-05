@@ -1,12 +1,12 @@
-Package: ADMGtmle
-Title: An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables
+Package: flexCausal
+Title: An R Package for Causal Effect Estimation via Doubly Robust One-Step Estimators and TMLE in Graphical Models with Unmeasured Variables
 Version: 0.0.0.9000
 Authors@R: 
     person("Anna", "Guo", 
        email = "guo.anna617@gmail.com",
        role = c("aut", "cre"),
        comment = c(GitHub = "https://github.com/annaguo-bios"))
-Description: An R package for estimating causal effects in graphical models with unmeasured variables. It implements the doubly robust onestep estimator and Targeted Maximum Likelihood Estimation (TMLE) estimator. It is able to incorporate machine learning algorithms via SuperLearn and allows sample splitting in model training.
+Description: An R package for estimating causal effects in graphical models with unmeasured variables. It implements the doubly robust onestep estimator and Targeted Maximum Likelihood Estimation (TMLE) estimator. It is able to incorporate machine learning algorithms via SuperLearner and allows sample splitting in model training.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

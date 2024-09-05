@@ -16,7 +16,7 @@ A vector of vertices that is in the district of the given vertex.
 }
 \description{
 Function to extract the name of vertices that is in the district of a given vertex in a graph object.
-District of a unfixed vertex Vi is the set of vertices that are connected to Vi by bidirected edges, including Vi itself by convention.
+District of an unfixed vertex Vi is the set of vertices that are connected to Vi by bidirected edges, including Vi itself by convention.
 }
 \examples{
 graph <- make.graph(vertices=c('A','M','L','Y','X'),
