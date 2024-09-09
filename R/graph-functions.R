@@ -638,7 +638,7 @@ is.p.fix <- function(graph, treatment){
 
     if (list(c(treatment, child)) %in% bi_edges || list(c(child, treatment)) %in% bi_edges) {
 
-      print("The treatment is not primal fixable in the provided graph.")
+      message("The treatment is not primal fixable in the provided graph.")
 
       return(FALSE)  # Bidirected edge found between node and child
     }
@@ -687,7 +687,7 @@ is.fix <- function(graph, treatment){
 
     if (list(c(treatment, d)) %in% bi_edges || list(c(d, treatment)) %in% bi_edges) {
 
-      print("The treatment is not fixable in the provided graph.")
+      message("The treatment is not fixable in the provided graph.")
 
       return(FALSE)  # Bidirected edge found between node and descendants
     }
