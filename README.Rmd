@@ -3,7 +3,7 @@ title: "An R Package for Causal Effect Estimation in Graphical Models with Unmea
 output: 
   github_document:
     toc: true
-    number_sections: false
+    number_sections: true
 ---
 
 This package is built for estimating the Average Causal Effect (ACE) in graphical models with unmeasured variables. This package is an implementation of the proposed estimators by \red{XXX}, based on the theory of influence functions and targeted minimum loss based estimation (TMLE).
@@ -13,16 +13,16 @@ This package is built for estimating the Average Causal Effect (ACE) in graphica
 
 
 
-If you find this package useful, please cite:
+If you find this package useful, please cite: [this paper](http://www.arxiv.org/pdf/2409.03962)
 ```{r, eval = FALSE, citation}
-print("placeholder")
+## placeholder for citation
 ```
 
 Graphical models with unmeasured variables can be depicted via the Acyclic Directed Mixed Graphs (ADMG). For example, consider the following ADMG, where $A$  is the treatment variable and $Y$ is the outcome variable:
 
 ![](ADMG.png)
 
-## Installation
+# Installation
 To install, run the following code in terminal:
 
 ```{bash, eval = FALSE}
@@ -32,7 +32,7 @@ devtools::install_github("annaguo-bios/flexCausal")
 
 The source code for `flexCausal` package is available on GitHub at [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
-## Quick Start
+# Quick Start
 The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both TMLE esetimator and onestep estimator in graphical models with unmeasured variables. To get a flavor of how to use this package, we provide a quick example below:
 
 ```{r, quick-start, warning=F, message=F}
@@ -57,9 +57,9 @@ The code above estimates the ACE of treatment $A$ on outcome $Y$, defined as $E(
 - `outcome`: a string, specifying the name of the outcome variable.
 - `multivariate.variables`: a list of variables that are multivariate. For example, `list(M=c('M1','M2'))` specifies that $M$ is a multivariate variable with components $M1$ and $M2$.
 
-## Estimation via TMLE estimator and onestep estimator
+# Estimation via TMLE estimator and onestep estimator
 
-### The Onestep Estimator
+## The Onestep Estimator
 In implementing the onestep estimator, we use the trick of sequential regression. For example, in the above example (a), the onestep estimator involves a nuisance $E\left[E(Y|L, M,a_1,X)\right | M,a_0,X]$, where $a_1=1-a$, $a_0=a$, and $a$ is the level of intervention of treatment $A$. To estimate this nuisance, we would first fit a regression model of $Y$ on $L, M, A, X$ to get and estimate $\hat{E}(Y|L, M,a_1,X)$ and then fit a regression model of $\hat{E}(Y|L, M,a_1,X)$ on $L, M, A, X$. We offer three options for the regression model: (1) via simple linear or logistic regression, (2) via SuperLearner, and (3) via SuperLearner together with cross-fitting. Below we elaborate on the three options:
   
 - Option 1: Simple linear or logistic regression. The function offers `formulaY` and `formulaA` to specify the regression model for the outcome regression and propensity score regression, respectively. It further allow users to specify the link function for the outcome regression and propensity score regression via `linkY_binary` and `linkA`, respectively. Note that `linkY_binary` is only effective when the outcome is a binary variable.
@@ -82,7 +82,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 K=5)
 ```
 
-### The TMLE Estimator
+## The TMLE
 In implementing the TMLE estimator,apart from sequential regression, we also need to estimate density ratios. For example, in the above example (a), the TMLE estimator involves a nuisance $p(M|a_0,X)/p(M|a_1,X)$. We need to estimate the density ratio for two sets of variables. Let $C$ be the set of pre-treatment variables, let $L$ be the set of variables that are connect with treatment $A$ via bidirected edges, and let $M$ be the set of variables that is not in either $C$ or $L$. We need to estimate the density ratio for variables in $L\backslash A,Y$ and $M\backslash Y$. We offer three options for the density ratio estimation: (1) via the \link[densratio]{densratio} package, (2) via Bayes rule, and (3) via assuming normal distribution for continuous varialbes. Below we elaborate on the three options:
  
 - Option 1: The \link[densratio]{densratio} package. The function calls the \link[densratio]{densratio} package to estimate the density ratio for variables in $L\backslash A,Y$ or $M\backslash Y$ if `ratio.method.L="densratio"` or `ratio.method.M="densratio"`, respectively.
@@ -101,7 +101,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 ratio.method.M = "dnorm")
 ```
 
-## Output
+# Output
 As an example, we `ADMGtmle()` to estimate the average counterfactual outcome $E(Y^1)$. The output is described as follows
 
 ```{r, output, eval=F}
@@ -132,7 +132,7 @@ est$TMLE$EDstar.record # the mean of the estimated efficient influence function 
 
 ```
 
-## Functions for learning the properties of ADMG
+# Functions for learning the properties of ADMG
 Apart from the `ADMGtmle()` for causal effection estimation, we also provide functions for learning the properties of ADMG. The functions are described as follows:
   
 - `make.graph`: create the graph object. For example, to create the graph object for the ADMG in Figure (a), we can use the following code:

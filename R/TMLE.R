@@ -202,11 +202,11 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
 
   if (suppressMessages(is.np.saturated(graph))){
 
-    message("The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimators.")
+    message("\n The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimators.")
 
   }else{
 
-    message("The graph is NOT nonparametrically saturated. Note that there may be more efficient estimators.")
+    message("\n The graph is NOT nonparametrically saturated. Note that there may be more efficient estimators.")
 
   }
 

@@ -20,7 +20,7 @@
 
   if (is.vector(a) & length(a)>2){ ## Invalid input ==
 
-    print("Invalid input. Enter a=c(vaule1,value2) for average causal effect estimation: (Y(a=value1)) - E(Y(a=value2)). Enter a=value1 for average counterfactual outcome estimation at the specified treatment level value1.")
+    stop("Invalid input. Enter a=c(vaule1,value2) for average causal effect estimation: (Y(a=value1)) - E(Y(a=value2)). Enter a=value1 for average counterfactual outcome estimation at the specified treatment level value1.")
 
   }else if (is.vector(a) & length(a)==2){ ## ATE estimate ==
 

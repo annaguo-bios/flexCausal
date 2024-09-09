@@ -2,15 +2,15 @@ An R Package for Causal Effect Estimation in Graphical Models with
 Unmeasured Variables
 ================
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Estimation via TMLE estimator and onestep
-  estimator](#estimation-via-tmle-estimator-and-onestep-estimator)
-  - [The Onestep Estimator](#the-onestep-estimator)
-  - [The TMLE Estimator](#the-tmle-estimator)
-- [Output](#output)
-- [Functions for learning the properties of
-  ADMG](#functions-for-learning-the-properties-of-admg)
+- [1 Installation](#1-installation)
+- [2 Quick Start](#2-quick-start)
+- [3 Estimation via TMLE estimator and onestep
+  estimator](#3-estimation-via-tmle-estimator-and-onestep-estimator)
+  - [3.1 The Onestep Estimator](#31-the-onestep-estimator)
+  - [3.2 The TMLE](#32-the-tmle)
+- [4 Output](#4-output)
+- [5 Functions for learning the properties of
+  ADMG](#5-functions-for-learning-the-properties-of-admg)
 
 This package is built for estimating the Average Causal Effect (ACE) in
 graphical models with unmeasured variables. This package is an
@@ -19,10 +19,11 @@ influence functions and targeted minimum loss based estimation (TMLE).
 
 ![](pkg.jpg)
 
-If you find this package useful, please cite:
+If you find this package useful, please cite: [this
+paper](http://www.arxiv.org/pdf/2409.03962)
 
 ``` r
-print("placeholder")
+## placeholder for citation
 ```
 
 Graphical models with unmeasured variables can be depicted via the
@@ -32,7 +33,7 @@ outcome variable:
 
 ![](ADMG.png)
 
-## Installation
+# 1 Installation
 
 To install, run the following code in terminal:
 
@@ -44,7 +45,7 @@ devtools::install_github("annaguo-bios/flexCausal")
 The source code for `flexCausal` package is available on GitHub at
 [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
-## Quick Start
+# 2 Quick Start
 
 The main function in this package is `ADMGtmle()`, which estimates the
 Average Causal Effect (ACE) using both TMLE esetimator and onestep
@@ -96,9 +97,9 @@ on Figure (a). The function `ADMGtmle()` takes the following arguments:
   For example, `list(M=c('M1','M2'))` specifies that $M$ is a
   multivariate variable with components $M1$ and $M2$.
 
-## Estimation via TMLE estimator and onestep estimator
+# 3 Estimation via TMLE estimator and onestep estimator
 
-### The Onestep Estimator
+## 3.1 The Onestep Estimator
 
 In implementing the onestep estimator, we use the trick of sequential
 regression. For example, in the above example (a), the onestep estimator
@@ -146,7 +147,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 K=5)
 ```
 
-### The TMLE Estimator
+## 3.2 The TMLE
 
 In implementing the TMLE estimator,apart from sequential regression, we
 also need to estimate density ratios. For example, in the above example
@@ -198,7 +199,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 ratio.method.M = "dnorm")
 ```
 
-## Output
+# 4 Output
 
 As an example, we `ADMGtmle()` to estimate the average counterfactual
 outcome $E(Y^1)$. The output is described as follows
@@ -229,7 +230,7 @@ est$TMLE$iter # iterations take for TMLE estimator to converge
 est$TMLE$EDstar.record # the mean of the estimated efficient influence function at each iteration
 ```
 
-## Functions for learning the properties of ADMG
+# 5 Functions for learning the properties of ADMG
 
 Apart from the `ADMGtmle()` for causal effection estimation, we also
 provide functions for learning the properties of ADMG. The functions are

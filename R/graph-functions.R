@@ -645,7 +645,7 @@ is.p.fix <- function(graph, treatment){
 
   }
 
-  print("The treatment is primal fixable in the provided graph.")
+  message("The treatment is primal fixable in the provided graph.")
   return(TRUE)  # No bidirected edge found between node and any child
 
 
@@ -694,7 +694,7 @@ is.fix <- function(graph, treatment){
 
   }
 
-  print("The treatment is primal fixable in the provided graph.")
+  message("The treatment is primal fixable in the provided graph.")
   return(TRUE)  # No bidirected edge found between node and any descendant
 
 
