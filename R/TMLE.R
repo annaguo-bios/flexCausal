@@ -155,6 +155,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
 
   }else{ # the graph is not fixable: the graph is primal fixable
 
+    message("The treatment is not fixable but is primal fixable. Estimation provided via extended front-door adjustment.")
 
     np.out <- .call_nps(a = a, data = data, vertices = vertices,
                         di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome,
@@ -202,7 +203,7 @@ ADMGtmle <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=NUL
 
   if (suppressMessages(is.np.saturated(graph))){
 
-    message("\n The graph is nonparametrically saturated. The nonparametric TMLE and one-step estimator results are provided, which are in theory the most efficient estimators.")
+    message("\n The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.")
 
   }else{
 

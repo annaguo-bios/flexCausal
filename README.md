@@ -73,10 +73,13 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 multivariate.variables = list(M=c('M.1','M.2')))
 ```
 
-    ## [1] "The treatment is not fixable in the provided graph."
-    ## [1] "The treatment is primal fixable in the provided graph."
+    ## The treatment is not fixable but is primal fixable. Estimation provided via extended front-door adjustment.
+
     ## TMLE estimated ACE: 1.94; 95% CI: (1.31, 2.57) 
     ## Onestep estimated ACE: 1.94; 95% CI: (1.32, 2.56)
+
+    ## 
+    ##  The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
 
 The code above estimates the ACE of treatment $A$ on outcome $Y$,
 defined as $E(Y^1)-E(Y^0)$, using the data `data_fig_4a` generated based

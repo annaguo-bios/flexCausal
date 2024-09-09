@@ -2,27 +2,27 @@
 title: "Introduction to the flexCausal package"
 output: rmarkdown::html_vignette
 vignette: >
+  %\VignetteIndexEntry{Introduction to the flexCausal package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-# An R Package for Causal Effect Estimation in Graphical Models with Unmeasured Variables
 
 This package is built for estimating the Average Causal Effect (ACE) in graphical models with unmeasured variables. This package is an implementation of the proposed estimators by \red{XXX}, based on the theory of influence functions and targeted minimum loss based estimation (TMLE).
 
 
-![](../pkg.jpg)
+![](../pkg.jpg){width=100%}
 
 
 
-If you find this package useful, please cite:
+If you find this package useful, please cite: [this paper](http://www.arxiv.org/pdf/2409.03962)
 ```{r, eval = FALSE, citation}
-print("placeholder")
+## placeholder for citation
 ```
 
 Graphical models with unmeasured variables can be depicted via the Acyclic Directed Mixed Graphs (ADMG). For example, consider the following ADMG, where $A$  is the treatment variable and $Y$ is the outcome variable:
 
-![](ADMG.png)
+![](../ADMG.png){width=100%}
 
 ## Installation
 The source code for `flexCausal` package is available on GitHub at [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
@@ -30,9 +30,14 @@ The source code for `flexCausal` package is available on GitHub at [flexCausal](
 ## Quick Start
 The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both TMLE esetimator and onestep estimator in graphical models with unmeasured variables. To get a flavor of how to use this package, we provide a quick example below:
 
-```{r, quick-start, warning=F, message=F}
+```{r, load-pkg, warning=F, message=F}
+
 library(flexCausal) # load the package
 head(data_fig_4a) # take a glance of the data, which is a simulated dataset under above figure (a).
+
+```
+
+```{r, quick-start, warning=F, message=T}
 
 est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 bi_edges=list(c('A','Y')),
