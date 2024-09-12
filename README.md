@@ -14,7 +14,8 @@ Unmeasured Variables
 
 This package is built for estimating the Average Causal Effect (ACE) in
 graphical models with unmeasured variables. This package is an
-implementation of the proposed estimators by , based on the theory of
+implementation of the proposed estimators by [this
+paper](http://www.arxiv.org/pdf/2409.03962), based on the theory of
 influence functions and targeted minimum loss based estimation (TMLE).
 
 ![](pkg.jpg)
@@ -23,7 +24,12 @@ If you find this package useful, please cite: [this
 paper](http://www.arxiv.org/pdf/2409.03962)
 
 ``` r
-## placeholder for citation
+@article{guo2024average,
+  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
+  author={Guo, Anna and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2409.03962},
+  year={2024}
+}
 ```
 
 Graphical models with unmeasured variables can be depicted via the
