@@ -111,9 +111,9 @@ on Figure (a). The function `ADMGtmle()` takes the following arguments:
   For example, `list(M=c('M1','M2'))` specifies that $M$ is a
   multivariate variable with components $M1$ and $M2$.
 
-# 4 Influence function-based Estimation via one-step correction and TMLE 
+# 4 Influence Function-Based Estimation via One-Step Correction and TMLE 
 
-## 4.1 One-step Corrected Plug-in Estimators
+## 4.1 One-Step Corrected Plug-In Estimation
 
 In implementing the onestep estimator, we use the trick of sequential
 regression. For example, in the above example (a), the onestep estimator
@@ -244,7 +244,7 @@ est$TMLE$iter # iterations take for TMLE estimator to converge
 est$TMLE$EDstar.record # the mean of the estimated efficient influence function at each iteration
 ```
 
-# 6 Functions for learning the properties of ADMG
+# 6 Properties of ADMGs
 
 Apart from the `ADMGtmle()` for causal effection estimation, we also
 provide functions for learning the properties of ADMG. The functions are
