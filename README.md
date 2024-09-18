@@ -2,36 +2,31 @@ An R Package for Causal Effect Estimation and Inference in Graphical Models with
 Unmeasured Variables
 ================
 
-- [1 Installation](#1-installation)
+- [1 Introduction](#1-introduction)
 - [2 Installation](#1-installation)
 - [3 Quick Start](#2-quick-start)
-- [4 Influence function-based Estimation via one-step correction and TMLE](#4-estimation-via-onestep-and-tmle)
-  - [4.1 One-step Corrected Plug-In Estimation](#41-onestep-estimator)
-  - [4.2 Targeted Minimum Loss Based Estiamtion (TMLE)](#42-tmle)
+- [4 Influence Function-Based Estimation via One-Step Correction and TMLE](#4-estimation-via-onestep-and-tmle)
+  - [4.1 One-Step Corrected Plug-In Estimation](#41-onestep-estimator)
+  - [4.2 Targeted Minimum Loss Based Estimation (TMLE)](#42-tmle)
 - [5 Output](#5-output)
-- [6 Functions for learning the properties of
-  ADMG](#6-functions-for-learning-the-properties-of-admg)
+- [6 Properties of
+  ADMGs](#6-properties-of-admgs)
 
 # 1 Introduction
 
-This package is built for estimating the Average Causal Effect (ACE) in
-graphical models with unmeasured variables. This package is an
-implementation of the proposed estimators by [this
-paper](http://www.arxiv.org/pdf/2409.03962), based on the theory of
-influence functions and targeted minimum loss based estimation (TMLE).
+`flexCausal` is designed to estimate the Average Causal Effect (ACE) in directed acyclic graphs (DAGs) with 
+latent, hidden, or unmeasured variables. By projecting these hidden variables, the package works within acyclic directed mixed graphs (ADMGs).  
+This package implements novel estimators introduced in [this paper](http://www.arxiv.org/pdf/2409.03962), 
+leveraging advanced methods from the theory of influence functions and targeted minimum loss-based estimation (TMLE). 
+By providing robust causal estimates, `flexCausal` enables users to gain deeper insights into complex data structures where 
+unmeasured confounding is a concern. 
+
+Here’s a schematic view of what `flexCausal` is capable of:
 
 ![](pkg.jpg)
 
-Graphical models with unmeasured variables can be depicted via the
-Acyclic Directed Mixed Graphs (ADMG). For example, consider the
-following ADMG, where $A$ is the treatment variable and $Y$ is the
-outcome variable:
-
-![](ADMG.png)
-
-
-If you find this package useful, please cite: [this
-paper](http://www.arxiv.org/pdf/2409.03962)
+If you find this package useful, please cite [this
+paper:](http://www.arxiv.org/pdf/2409.03962)
 
 ``` r
 @article{guo2024average,
@@ -44,23 +39,33 @@ paper](http://www.arxiv.org/pdf/2409.03962)
 
 # 2 Installation
 
-To install, run the following code in terminal:
+To install, run the following code in your R console:
 
-``` bash
-# install the devtools package first if it's not yet installed
+``` bash 
+
+# First, install the devtools package if it's not already installed
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+
+# Then, install the flexCausal package from GitHub
 devtools::install_github("annaguo-bios/flexCausal")
 ```
 
 # 3 Quick Start
 
-The main function in this package is `ADMGtmle()`, which estimates the
-Average Causal Effect (ACE) using both TMLE esetimator and onestep
-estimator in graphical models with unmeasured variables. To get a flavor
-of how to use this package, we provide a quick example below:
+Consider the following ADMGs as illustrative examples: 
+
+![](ADMG.png)
+
+The main function in this package is `ADMGtmle()`, which estimates the 
+Average Causal Effect (ACE) using both a one-step corrected plug-in estimator 
+and a TMLE estimator. To get a sense of how to use this package, 
+we provide a quick example below. 
 
 ``` r
-library(flexCausal) # load the package
-head(data_fig_4a) # take a glance of the data, which is a simulated dataset under above figure (a).
+library(flexCausal) # Load the flexCausal package
+head(data_fig_4a) #  Take a look at a simulated dataset from Figure (a)
 ```
 
     ##           X          U A      M.1         M.2        L        Y
@@ -361,3 +366,9 @@ is.mb.shielded(graph)
 
 A graph being mb-shielded means that the graph only implies ordinary
 equality constraints on the observed data distribution.
+
+## <a id="References"></a>References
+- [Guo et al. 2023] Guo, A., Benkeser, D., & Nabi, R. **Targeted Machine Learning for Average Causal Effect Estimation Using the Front-Door Functional.** arXiv preprint arXiv:2312.10234, 2023. 
+- [Guo and Nabi. 2024] Guo, A.& Nabi, R. **Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria.** arXiv preprint arXiv:2409.03962, 2024. 
+
+
