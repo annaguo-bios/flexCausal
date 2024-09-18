@@ -5,9 +5,9 @@ Unmeasured Variables
 - [1 Introduction](#1-introduction)
 - [2 Installation](#2-installation)
 - [3 Quick Start](#3-quick-start)
-- [4 Influence Function-Based Estimation via One-Step Correction and TMLE](#4-estimation-via-onestep-and-tmle)
-  - [4.1 One-Step Corrected Plug-In Estimation](#41-onestep-estimator)
-  - [4.2 Targeted Minimum Loss Based Estimation (TMLE)](#42-tmle)
+- [4 Influence Function-Based Estimation via One-Step Correction and TMLE](#4-influence-function-based-estimation-via-one-step-correction-and-tmle)
+  - [4.1 One-Step Corrected Plug-In Estimation](#41-onestep-corrected-plug-in-estimation)
+  - [4.2 Targeted Minimum Loss Based Estimation (TMLE)](#42-targeted-minimum-loss-based-estimation-(tmle))
 - [5 Output](#5-output)
 - [6 Properties of
   ADMGs](#6-properties-of-admgs)
