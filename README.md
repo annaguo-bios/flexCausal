@@ -15,8 +15,8 @@ Unmeasured Variables
 # 1 Introduction
 
 `flexCausal` is designed to estimate the Average Causal Effect (ACE) in directed acyclic graphs (DAGs) with 
-latent, hidden, or unmeasured variables. By projecting these hidden variables, the package works within acyclic directed mixed graphs (ADMGs).  
-This package implements novel estimators introduced in [this paper](http://www.arxiv.org/pdf/2409.03962), 
+latent, hidden, or unmeasured variables. By projecting these hidden variables, the package works within 
+acyclic directed mixed graphs (ADMGs). This package implements novel estimators introduced in [this paper](http://www.arxiv.org/pdf/2409.03962), 
 leveraging advanced methods from the theory of influence functions and targeted minimum loss-based estimation (TMLE). 
 By providing robust causal estimates, `flexCausal` enables users to gain deeper insights into complex data structures where 
 unmeasured confounding is a concern. 
