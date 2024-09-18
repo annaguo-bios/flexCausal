@@ -6,8 +6,8 @@ Unmeasured Variables
 - [2 Installation](#2-installation)
 - [3 Quick Start](#3-quick-start)
 - [4 Influence Function-Based Estimation via One-Step Correction and TMLE](#4-influence-function-based-estimation-via-one-step-correction-and-tmle)
-  - [4.1 One-Step Corrected Plug-In Estimation](#41-onestep-corrected-plug-in-estimation)
-  - [4.2 Targeted Minimum Loss Based Estimation (TMLE)](#42-targeted-minimum-loss-based-estimation-(tmle))
+  - [4.1 One-Step Corrected Plug-In Estimation](#41-one-step-corrected-plug-in-estimation)
+  - [4.2 Targeted Minimum Loss Based Estimation](#42-targeted-minimum-loss-based-estimation)
 - [5 Output](#5-output)
 - [6 Properties of
   ADMGs](#6-properties-of-admgs)
@@ -161,7 +161,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 K=5)
 ```
 
-## 4.2 Targeted Minimum Loss Based Estimation (TMLE)
+## 4.2 Targeted Minimum Loss Based Estimation
 
 In implementing the TMLE estimator,apart from sequential regression, we
 also need to estimate density ratios. For example, in the above example
