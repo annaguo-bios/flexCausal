@@ -1,16 +1,18 @@
-An R Package for Causal Effect Estimation in Graphical Models with
+An R Package for Causal Effect Estimation and Inference in Graphical Models with
 Unmeasured Variables
 ================
 
 - [1 Installation](#1-installation)
-- [2 Quick Start](#2-quick-start)
-- [3 Estimation via TMLE estimator and onestep
-  estimator](#3-estimation-via-tmle-estimator-and-onestep-estimator)
-  - [3.1 The Onestep Estimator](#31-the-onestep-estimator)
-  - [3.2 The TMLE](#32-the-tmle)
-- [4 Output](#4-output)
-- [5 Functions for learning the properties of
-  ADMG](#5-functions-for-learning-the-properties-of-admg)
+- [2 Installation](#1-installation)
+- [3 Quick Start](#2-quick-start)
+- [4 Influence function-based Estimation via one-step correction and TMLE](#4-estimation-via-onestep-and-tmle)
+  - [4.1 One-step Corrected Plug-In Estimation](#41-onestep-estimator)
+  - [4.2 Targeted Minimum Loss Based Estiamtion (TMLE)](#42-tmle)
+- [5 Output](#5-output)
+- [6 Functions for learning the properties of
+  ADMG](#6-functions-for-learning-the-properties-of-admg)
+
+# 1 Introduction
 
 This package is built for estimating the Average Causal Effect (ACE) in
 graphical models with unmeasured variables. This package is an
@@ -19,6 +21,14 @@ paper](http://www.arxiv.org/pdf/2409.03962), based on the theory of
 influence functions and targeted minimum loss based estimation (TMLE).
 
 ![](pkg.jpg)
+
+Graphical models with unmeasured variables can be depicted via the
+Acyclic Directed Mixed Graphs (ADMG). For example, consider the
+following ADMG, where $A$ is the treatment variable and $Y$ is the
+outcome variable:
+
+![](ADMG.png)
+
 
 If you find this package useful, please cite: [this
 paper](http://www.arxiv.org/pdf/2409.03962)
@@ -32,14 +42,7 @@ paper](http://www.arxiv.org/pdf/2409.03962)
 }
 ```
 
-Graphical models with unmeasured variables can be depicted via the
-Acyclic Directed Mixed Graphs (ADMG). For example, consider the
-following ADMG, where $A$ is the treatment variable and $Y$ is the
-outcome variable:
-
-![](ADMG.png)
-
-# 1 Installation
+# 2 Installation
 
 To install, run the following code in terminal:
 
@@ -48,10 +51,7 @@ To install, run the following code in terminal:
 devtools::install_github("annaguo-bios/flexCausal")
 ```
 
-The source code for `flexCausal` package is available on GitHub at
-[flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
-
-# 2 Quick Start
+# 3 Quick Start
 
 The main function in this package is `ADMGtmle()`, which estimates the
 Average Causal Effect (ACE) using both TMLE esetimator and onestep
@@ -106,9 +106,9 @@ on Figure (a). The function `ADMGtmle()` takes the following arguments:
   For example, `list(M=c('M1','M2'))` specifies that $M$ is a
   multivariate variable with components $M1$ and $M2$.
 
-# 3 Estimation via TMLE estimator and onestep estimator
+# 4 Influence function-based Estimation via one-step correction and TMLE 
 
-## 3.1 The Onestep Estimator
+## 4.1 One-step Corrected Plug-in Estimators
 
 In implementing the onestep estimator, we use the trick of sequential
 regression. For example, in the above example (a), the onestep estimator
@@ -156,7 +156,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 K=5)
 ```
 
-## 3.2 The TMLE
+## 4.2 Targeted Minimum Loss Based Estimation (TMLE)
 
 In implementing the TMLE estimator,apart from sequential regression, we
 also need to estimate density ratios. For example, in the above example
@@ -208,7 +208,7 @@ est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
                 ratio.method.M = "dnorm")
 ```
 
-# 4 Output
+# 5 Output
 
 As an example, we `ADMGtmle()` to estimate the average counterfactual
 outcome $E(Y^1)$. The output is described as follows
@@ -239,7 +239,7 @@ est$TMLE$iter # iterations take for TMLE estimator to converge
 est$TMLE$EDstar.record # the mean of the estimated efficient influence function at each iteration
 ```
 
-# 5 Functions for learning the properties of ADMG
+# 6 Functions for learning the properties of ADMG
 
 Apart from the `ADMGtmle()` for causal effection estimation, we also
 provide functions for learning the properties of ADMG. The functions are
