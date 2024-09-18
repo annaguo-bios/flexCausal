@@ -3,8 +3,8 @@ Unmeasured Variables
 ================
 
 - [1 Introduction](#1-introduction)
-- [2 Installation](#1-installation)
-- [3 Quick Start](#2-quick-start)
+- [2 Installation](#2-installation)
+- [3 Quick Start](#3-quick-start)
 - [4 Influence Function-Based Estimation via One-Step Correction and TMLE](#4-estimation-via-onestep-and-tmle)
   - [4.1 One-Step Corrected Plug-In Estimation](#41-onestep-estimator)
   - [4.2 Targeted Minimum Loss Based Estimation (TMLE)](#42-tmle)
