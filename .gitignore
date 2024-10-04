@@ -2,3 +2,5 @@
 inst/doc
 .Rhistory
 R/.DS_Store
+.DS_Store
+.Rbuildignore
