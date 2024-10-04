@@ -179,7 +179,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   mpY <- replace.vector(mpY, multivariate.variables) # replace vertices with it's components if vertices are multivariate
 
   # prepare dataset for regression and prediction
-  dat_mpY <- data[,mpY] # extract data for Markov pillow for outcome
+  dat_mpY <- data[,mpY, drop=F] # extract data for Markov pillow for outcome
   dat_mpY.a0 <- dat_mpY %>% mutate(!!treatment := a0) # set treatment to a0
   dat_mpY.a1 <- dat_mpY %>% mutate(!!treatment := a1) # set treatment to a1
 
@@ -192,6 +192,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     mu.Y_a1 <- unlist(lapply(1:K, function(x) predict(or_fit$AllSL[[x]], newdata=dat_mpY.a1[or_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) or_fit$folds[[x]])))]
     mu.Y_a0 <- unlist(lapply(1:K, function(x) predict(or_fit$AllSL[[x]], newdata=dat_mpY.a0[or_fit$folds[[x]],])[[1]] %>% as.vector()))[order(unlist(lapply(1:K, function(x) or_fit$folds[[x]])))]
 
+    assign(paste0("mu.",outcome,"_a0"), mu.Y_a0)
+    assign(paste0("mu.",outcome,"_a1"), mu.Y_a1)
 
   } else if (superlearner.Y==T){ #### super learner #####
 
@@ -202,6 +204,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1)[[1]] %>% as.vector()
     mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0)[[1]] %>% as.vector()
 
+    assign(paste0("mu.",outcome,"_a0"), mu.Y_a0)
+    assign(paste0("mu.",outcome,"_a1"), mu.Y_a1)
+
   } else { #### simple linear regression with user input regression formula: default="Y ~ ." ####
 
     fit.family <- if(all(Y %in% c(0,1))){binomial(linkY_binary)}else{gaussian()} # family for super learner depending on whether Y is binary or continuous
@@ -211,6 +216,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1)
     mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0)
 
+    assign(paste0("mu.",outcome,"_a0"), mu.Y_a0)
+    assign(paste0("mu.",outcome,"_a1"), mu.Y_a1)
 
   }
 
@@ -276,7 +283,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   p.a1.mpA[p.a1.mpA<zerodiv.avoid] <- zerodiv.avoid
 
 
-  assign("densratio_A", p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+  assign(paste0("densratio_",treatment), p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
 
 
 
@@ -290,8 +297,6 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   if (ratio.method.L=="densratio"){ ################### METHOD 2A: densratio method  ###################
 
     # Error3: densratio method doesn't support factor variables
-
-
     if (!all(sapply(replace.vector(unique(c(L.removedA, unlist(lapply(1:length(L.removedA),function(i) f.markov_pillow(graph, L.removedA, treatment))))), multivariate.variables), function(var) is.numeric(data[,var]) | is.integer(data[,var])))){
 
       print("Error in estimating density ratios associated with variables in L: densratio method only support numeric/integer variables, try bayes method instead.")
@@ -324,7 +329,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
       if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
-        ratio.den <- 1/densratio_A
+        ratio.den <- 1/get(paste0("densratio_",treatment))
 
         assign(paste0("densratio.densratio_",v), ratio.num)
 
@@ -460,7 +465,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
           # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
           # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
           # such that we can come back to update the density ratio of v once we update the densratioA
@@ -512,7 +517,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
           # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
           # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
           # such that we can come back to update the density ratio of v once we update the densratioA
@@ -559,7 +564,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         p.a0.mpv[p.a0.mpv<zerodiv.avoid] <- zerodiv.avoid # added to avoid INF
 
         # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+        assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
         # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
         # such that we can come back to update the density ratio of v once we update the densratioA
@@ -569,7 +574,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
           # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
           # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
           # such that we can come back to update the density ratio of v once we update the densratioA
@@ -613,7 +618,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
   }
 
   # Get all the densratio vectors based on their names
-  densratio.vectors.L <- mget(c(paste0("densratio_",L.removedA),"densratio_A"))
+  densratio.vectors.L <- mget(c(paste0("densratio_",L.removedA),paste0("densratio_",treatment)))
 
   # Create a data frame using all the vectors
   densratio.L <- data.frame(densratio.vectors.L)
@@ -679,7 +684,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
       if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
-        ratio.den <- densratio_A
+        ratio.den <- get(paste0("densratio_",treatment))
 
         assign(paste0("densratio.densratio_",v), ratio.num)
 
@@ -816,7 +821,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
           # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
           # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
           # such that we can come back to update the density ratio of v once we update the densratioA
@@ -867,7 +872,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
           # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
           # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
           # such that we can come back to update the density ratio of v once we update the densratioA
@@ -921,7 +926,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         if (are_same(setdiff(replace.vector(f.markov_pillow(graph, v, treatment), multivariate.variables) ,treatment), replace.vector(f.markov_pillow(graph,treatment, treatment), multivariate.variables))){
 
           # save the density ratio: p(v|mp(V))|_{a0}/p(v|mp(V))|_{a1}
-          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/densratio_A)
+          assign(paste0("densratio_",v), {p.a0.mpv/p.a1.mpv}/get(paste0("densratio_",treatment)))
 
           # save the ratio of p(A|mp(v)\A,v)|_{a0}/p(A|mp(v)\A,v)|_{a1}
           # such that we can come back to update the density ratio of v once we update the densratioA
@@ -1007,7 +1012,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     mpv <- replace.vector(mpv, multivariate.variables) # replace vertices with it's components if vertices are multivariate
 
     # prepare dataset for regression and prediction
-    dat_mpv <- data[,mpv] # extract data for Markov pillow for v
+    dat_mpv <- data[,mpv, drop=F] # extract data for Markov pillow for v
 
     if (treatment %in% mpv){ # we only need to consider evaluate regression at specific level of A if treatment is in Markov pillow for v
 
@@ -1261,13 +1266,13 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     p.a1.mpA[p.a1.mpA<zerodiv.avoid] <- zerodiv.avoid
 
     # update density ratio of A
-    assign("densratio_A", p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
+    assign(paste0("densratio_",treatment), p.a0.mpA/p.a1.mpA) # density ratio regarding the treatment p(A|mp(A))|_{a_0}/p(A|mp(A))|_{a_1}
 
 
     # update density ratio for v in L if the ratio.method.L = "bayes" OR "densratio"
-    if (ratio.method.L == "bayes"){ for (v in L.use.densratioA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/densratio_A)} }
+    if (ratio.method.L == "bayes"){ for (v in L.use.densratioA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/get(paste0("densratio_",treatment)))} }
 
-    if (ratio.method.L == "densratio"){ for (v in L.use.densratioA){assign(paste0("densratio_",v), 1/(get(paste0("densratio.densratio_",v))*densratio_A))} }
+    if (ratio.method.L == "densratio"){ for (v in L.use.densratioA){assign(paste0("densratio_",v), 1/(get(paste0("densratio.densratio_",v))*get(paste0("densratio_",treatment))))} }
 
 
     # Update the density ratio data frame for L
@@ -1275,9 +1280,9 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
     densratio.L <- data.frame(densratio.vectors.L)
 
     # update density ratio for v in M if the ratio.method.M = "bayes" OR "densratio"
-    if (ratio.method.M == "bayes"){ for (v in M.use.densratioA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/densratio_A)} }
+    if (ratio.method.M == "bayes"){ for (v in M.use.densratioA){assign(paste0("densratio_",v), get(paste0("bayes.densratio_",v))/get(paste0("densratio_",treatment)))} }
 
-    if (ratio.method.M == "densratio"){ for (v in M.use.densratioA){assign(paste0("densratio_",v), get(paste0("densratio.densratio_",v))/densratio_A) } }
+    if (ratio.method.M == "densratio"){ for (v in M.use.densratioA){assign(paste0("densratio_",v), get(paste0("densratio.densratio_",v))/get(paste0("densratio_",treatment))) } }
 
       # Update the density ratio data frame for M
       densratio.vectors.M <- mget(paste0("densratio_",M))
@@ -1355,7 +1360,7 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
         mpv <- replace.vector(mpv, multivariate.variables) # replace vertices with it's components if vertices are multivariate
 
         # prepare dataset for regression and prediction
-        dat_mpv <- data[,mpv] # extract data for Markov pillow for v
+        dat_mpv <- data[,mpv, drop=F] # extract data for Markov pillow for v
 
         if (treatment %in% mpv){ # we only need to consider evaluate regression at specific level of A if treatment is in Markov pillow for v
 
