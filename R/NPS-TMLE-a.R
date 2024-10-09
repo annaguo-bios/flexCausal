@@ -213,8 +213,8 @@ NPS.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_edges=N
 
     or_fit <- glm(as.formula(formulaY), data=dat_mpY, family = fit.family)
 
-    mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1)
-    mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0)
+    mu.Y_a1 <- predict(or_fit, newdata=dat_mpY.a1, type = "response")
+    mu.Y_a0 <- predict(or_fit, newdata=dat_mpY.a0, type = "response")
 
     assign(paste0("mu.",outcome,"_a0"), mu.Y_a0)
     assign(paste0("mu.",outcome,"_a1"), mu.Y_a1)
