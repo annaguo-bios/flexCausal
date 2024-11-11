@@ -23,6 +23,8 @@ paper](http://www.arxiv.org/pdf/2409.03962).
 
 <img src="background.png" style="width:100.0%" />
 
+<div style="border: 2px solid orange; padding: 10px; width: 95%; border-radius: 15px;margin-bottom: 20px;">
+
 The package asks for the following **inputs** from the user:  
 - Dataset
 
@@ -31,6 +33,10 @@ The package asks for the following **inputs** from the user:
 - ADMG (acyclic directed mixed graph), a projection of directed acyclic
   graphs (DAG) with latent variables. This can be based on expert
   knowledge, causal discovery methods, or a combination of both.
+
+</div>
+
+<div style="border: 2px solid orange; padding: 10px; width: 95%; border-radius: 15px;margin-bottom: 15px;">
 
 The package **outputs**:  
 - Whether the causal effect is identifiable
@@ -44,6 +50,8 @@ The package **outputs**:
 - An assessment of whether the specified ADMG is nonparametrically
   saturated, and if current estimates reach the semiparametric
   efficiency bounds.
+
+</div>
 
 Here’s a schematic view of what `flexCausal` is capable of and how it
 works:
