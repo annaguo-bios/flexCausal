@@ -1,7 +1,9 @@
+## Simulation Scenario (b) ==
+# the ADMG includes observed variables: X,A,M,L,Y
+# the ADMG includes directed paths: X -> A, X->M, X->L, X->Y; A->M, A->Y; M->L; L->Y
+# the ADMG includes bidirected paths: A<->:, M<->Y
 
 set.seed(7)
-## Simulation Figure4(b) ==
-
 generate_data <- function(n,parA = c(1,1), parU1=c(1,1,1,0),parU2=c(1,1,1,1,1), parM = matrix(c(1, 1, 1, 0,-1,-0.5,2,0), nrow = 2,byrow = T), parL= c(1,1,1, 1, 1) ,parY = c(1, 1, 1, 1, 1, 1), sd.U1=1, sd.U2=1, sd.M= matrix(c(2, 1, 1, 3), nrow = 2), sd.L=1, sd.Y=1){
 
   X <- runif(n, 0, 1) # p(X)
@@ -40,6 +42,6 @@ generate_data <- function(n,parA = c(1,1), parU1=c(1,1,1,0),parU2=c(1,1,1,1,1), 
 }
 
 
-data_fig_4b <- generate_data(2000)$data
+data_example_b <- generate_data(2000)$data
 
-usethis::use_data(data_fig_4b, overwrite = T)
+usethis::use_data(data_example_b, overwrite = T)

@@ -74,7 +74,7 @@
 #'       \item{\code{iter}}{Number of iterations where convergence is achieved for the iterative update of the mediator density and propensity score.}}
 #' @examples
 #' # E(Y(1)) estimation.
-#' NPS.TMLE.a(a=1,data=data_fig_4a, vertices=c('A','M','L','Y','X'),
+#' NPS.TMLE.a(a=1,data=data_example_a, vertices=c('A','M','L','Y','X'),
 #' bi_edges=list(c('A','Y')), di_edges=list(c('X','A'), c('X','M'),
 #' c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
 #' treatment='A', outcome='Y', multivariate.variables = list(M=c('M.1','M.2')))

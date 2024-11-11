@@ -11,11 +11,11 @@
 #'  \item{Y}{a variable that follows normal distribution}
 #'  }
 
-#' @name data_fig_4a
+#' @name data_example_a
 #' @docType data
 #' @references \url{https://github.com/annaguo-bios/ADMGtmle/tree/main}
 #' @keywords data
-"data_fig_4a"
+"data_example_a"
 
 
 #' This is data generated from the simulation model in Figure 4(b) of the paper "Targeted Learning of Average Causal Effects in Graphical Models with Unmeasured Variables: Extensions of the Front-Door Model".
@@ -31,11 +31,11 @@
 #'  \item{Y}{a variable that follows normal distribution}
 #'  }
 
-#' @name data_fig_4b
+#' @name data_example_b
 #' @docType data
 #' @references \url{https://github.com/annaguo-bios/ADMGtmle/tree/main}
 #' @keywords data
-"data_fig_4b"
+"data_example_b"
 
 
 

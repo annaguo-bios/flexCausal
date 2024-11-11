@@ -6,7 +6,28 @@ output:
     number_sections: true
 ---
 
-This package is built for estimating the Average Causal Effect (ACE) in graphical models with unmeasured variables. This package is an implementation of the proposed estimators by [this paper](http://www.arxiv.org/pdf/2409.03962), based on the theory of influence functions and targeted minimum loss based estimation (TMLE).
+\newcommand{\red}{\textcolor{red}}
+\newcommand{\blue}{\textcolor{blue}}
+
+The `flexCausal` R package enables estimation of Average Causal Effects (ACE) for a broad class of graphical models that satisfy the treatment primal fixability criterion. Briefly, the package accepts a dataset and a causal graph—defined through nodes, directed edges, and bi-directed edges—as input and provides causal effect estimates using robust influence-function-based estimators developed in [this paper](http://www.arxiv.org/pdf/2409.03962).
+
+![](background.png){width=100%}
+
+The package asks for the following **inputs** from the user:  
+- Dataset
+
+- Treatment and outcome specifications
+
+- ADMG (acyclic directed mixed graph), a projection of directed acyclic graphs (DAG) with latent variables. This can be based on expert knowledge, causal discovery methods, or a combination of both.
+
+The package **outputs**:  
+- Whether the causal effect is identifiable
+
+- The estimated causal effect with confidence intervals (if the causal effect is identifiable under primal fixability criterion). Users can specify either one-step or TMLE estimators, or choose to use both. Additionally, they can select methods for nuisance parameter estimation, with SuperLearner set as the default.
+
+- An assessment of whether the specified ADMG is nonparametrically saturated, and if current estimates reach the semiparametric efficiency bounds.
+
+Here's a schematic view of what `flexCausal` is capable of and how it works:
 
 
 ![](pkg.jpg)
@@ -23,10 +44,6 @@ If you find this package useful, please cite: [this paper](http://www.arxiv.org/
 }
 ```
 
-Graphical models with unmeasured variables can be depicted via the Acyclic Directed Mixed Graphs (ADMG). For example, consider the following ADMG, where $A$  is the treatment variable and $Y$ is the outcome variable:
-
-![](ADMG.png)
-
 # Installation
 To install, run the following code in terminal:
 
@@ -37,35 +54,82 @@ devtools::install_github("annaguo-bios/flexCausal")
 
 The source code for `flexCausal` package is available on GitHub at [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
-# Quick Start
-The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both TMLE esetimator and onestep estimator in graphical models with unmeasured variables. To get a flavor of how to use this package, we provide a quick example below:
+# A Brief Introduction to ADMGs
+The ADMG is one of the major input to the `flexCausal` package. It is a projection of a Directed Acyclic Graph (DAG) with unmeasured variables into only observed variables. Let $G(O \cup U)$ denote a DAG with observed variables $O$ and unmeasured variables $U$. The ADMG is a projection of $G(O \cup U)$ onto $O$ only, denoted as $G(O)$. The projection is guided by the following rules:
+  
+1. $O_i \ \blue{\rightarrow} \ O_j$ is included in the ADMG $G(O)$ if $O_i \ \blue{\rightarrow} \ O_j$ exists in $G(O \cup U)$ or if a directed path from $O_i$ to $O_j$ exists that passes through only unmeasured variables in $G(O \cup U)$.
+2. $V_i \ \red{\leftrightarrow} \ V_j$ is included in the ADMG $G(O)$ if a collider-free path, like $V_i \ \blue{\leftarrow} \cdots \blue{\rightarrow} \ V_j$, exists in $G(O \cup U)$ where all the intermediate variables belong to $U$.
+
+See Examples (a) and (b), where the DAGs with unmeasured variables on the left are projected onto their corresponding ADMGs on the right:
+![](illustrative_examples.jpeg)
+
+In all the following discussions, we will use the ADMG in example (a) above as a running example. The packages comes with simulated datasets `data_example_a` and `data_example_b` that are generated from the ADMGs in examples (a) and (b), respectively. Let’s take a look at the first few rows of `data_example_a`:
 
 ```{r, load-pkg, warning=F, message=F}
 
 library(flexCausal) # load the package
-head(data_fig_4a) # take a glance of the data, which is a simulated dataset under above figure (a).
+
+head(data_example_a) # take a glance of the data, which is a simulated dataset under above figure (a).
 
 ```
+
+Note that the $M$ variable in the dataset is a multivariate variable, consisting of two components, $M.1$ and $M.2$. To input the ADMG into the `flexCausal` package, users need to specify the *vertices*, *directed edges*, and *bi-directed edges* in the ADMG, along with the components of any *multivariate variables*.  
+
+For example, to input the ADMG in example (a) above that aligns with the simulated dataset, we would create a graph object with the `make.graph()` function:
+
+```{r, eval=T, warning=F, message=F}
+
+# create a graph object for the ADMG in example (a)
+graph_a <- make.graph(vertices=c('A','M','L','Y','X'), # specify the vertices
+                bi_edges=list(c('A','Y')), # specify the bi-directed edges
+                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')), # specify the directed edges, with each pair of variables indicating an directed edge from the first variable to the second. For example, c('X', 'A') represents a directed edge from X to A.
+                multivariate.variables = list(M=c('M.1','M.2'))) # specify the components of the multivariate variable M
+
+```
+
+With this graph object in hand, we can conveniently explore various properties of the ADMG using functions provided in the package. These functions include topological ordering, genealogical relations, and causal effect identifiability, and etc. For a detailed discussion, see [Functions for learning the properties of ADMG]. 
+
+As a quick example, we can obtain the adjacency matrix of this ADMG with the `f.adj_matrix()` function:
+
+```{r, eval=T, warning=F, message=F}
+
+f.adj_matrix(graph_a) # get the adjacency matrix of the ADMG in example (a)
+
+```
+
+
+# Quick Start on Estimation
+
+The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both a one-step corrected plug-in estimator and a TMLE estimator. To get a sense of how to use this package, we provide a quick example below. We will use the ADMG in example (a) above to estimate the ACE of treatment $A$ on outcome $Y$ using a simulated dataset `data_example_a`. We can directly use the `graph_a` object created above as the input to the function.
 
 ```{r, quick-start, warning=F, message=T}
 
-est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M.1','M.2')))
+est <- ADMGtmle(a=c(1,0),
+                data=data_example_a, 
+                graph=graph_a,
+                treatment='A', outcome='Y')
 ```
 
-The code above estimates the ACE of treatment $A$ on outcome $Y$, defined as $E(Y^1)-E(Y^0)$, using the data `data_fig_4a` generated based on Figure (a). The function `ADMGtmle()` takes the following arguments:
+The code above estimates the ACE of treatment $A$ on outcome $Y$, defined as $E(Y^1)-E(Y^0)$, using the data `data_example_a` generated based on Figure (a). The function `ADMGtmle()` takes the following arguments:
   
-- `a`: a vector of length 2, specifying the values of treatment $A$ to compare. For example, `a=c(1,0)` compares causal effect under $A=1$ verse $A=0$.
+- `a`: a vector of length 2, specifying the values of treatment $A$ to compare. For example, `a=c(1,0)` compares causal effect under $A=1$ verse $A=0$. Alternatively, `a` can be input as a single integer if estimating the causal effect under only one treatment level is the goal. For example, to estimate $E(Y^1)$, specify `a = 1`.
 - `data`: a data frame containing the data.
-- `vertices`: a vector of strings, specifying the names of all vertices in the ADMG.
-- `bi_edges`: a list of bi-directed edges in the ADMG.
-- `di_edges`: a list of directed edges in the ADMG. For example, `c('X','A')` specifies an edge from $X$ to $A$.
+- `graph`: a graph object specifying the ADMG.
 - `treatment`: a string, specifying the name of the treatment variable.
 - `outcome`: a string, specifying the name of the outcome variable.
-- `multivariate.variables`: a list of variables that are multivariate. For example, `list(M=c('M1','M2'))` specifies that $M$ is a multivariate variable with components $M1$ and $M2$.
+
+
+Alternatively, instead of providing a graph object, users can directly specify the vertices, directed edges, and bi-directed edges within the ADMGtmle() function, as shown below:
+
+```{r, quick-start-option2, warning=F, message=T}
+
+est <- ADMGtmle(a=c(1,0),data=data_example_a, 
+                vertices=c('A','M','L','Y','X'), # specify the vertices
+                bi_edges=list(c('A','Y')), # specify the bi-directed edges
+                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')), # specify the directed edges
+                multivariate.variables = list(M=c('M.1','M.2')), # specify the components of the multivariate variable M
+                treatment='A', outcome='Y')
+```
 
 # Estimation via TMLE estimator and onestep estimator
 
@@ -80,7 +144,7 @@ The code below is an example of adopting SuperLearner with cross-fitting:
 
 ```{r, onestep-eg, warning=F, message=F, eval=F}
 
-est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
+est <- ADMGtmle(a=c(1,0),data=data_example_a, vertices=c('A','M','L','Y','X'),
                 bi_edges=list(c('A','Y')),
                 di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
                 treatment='A', outcome='Y',
@@ -103,7 +167,7 @@ The code below is an example of using the `dnorm` method for the density ratio e
 
 ```{r, tmle-eg, warning=F, message=F, eval=F}
 
-est <- ADMGtmle(a=c(1,0),data=data_fig_4a, vertices=c('A','M','L','Y','X'),
+est <- ADMGtmle(a=c(1,0),data=data_example_a, vertices=c('A','M','L','Y','X'),
                 bi_edges=list(c('A','Y')),
                 di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
                 treatment='A', outcome='Y',
@@ -116,7 +180,7 @@ As an example, we `ADMGtmle()` to estimate the average counterfactual outcome $E
 
 ```{r, output, eval=F}
 
-est <- ADMGtmle(a=1,data=data_fig_4a, vertices=c('A','M','L','Y','X'),
+est <- ADMGtmle(a=1,data=data_example_a, vertices=c('A','M','L','Y','X'),
                 bi_edges=list(c('A','Y')),
                 di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
                 treatment='A', outcome='Y',
@@ -143,7 +207,7 @@ est$TMLE$EDstar.record # the mean of the estimated efficient influence function 
 ```
 
 # Functions for learning the properties of ADMG
-Apart from the `ADMGtmle()` for causal effection estimation, we also provide functions for learning the properties of ADMG. The functions are described as follows:
+Apart from the `ADMGtmle()` for causal effec estimation, we also provide functions for learning the properties of ADMG. The functions are described as follows:
   
 - `make.graph`: create the graph object. For example, to create the graph object for the ADMG in Figure (a), we can use the following code:
 
