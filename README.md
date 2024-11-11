@@ -5,8 +5,8 @@ Unmeasured Variables
 - [1 Installation](#1-installation)
 - [2 A Brief Introduction to ADMGs](#2-a-brief-introduction-to-admgs)
 - [3 Quick Start on Estimation](#3-quick-start-on-estimation)
-- [4 Estimation via TMLE estimator and onestep
-  estimator](#4-estimation-via-tmle-estimator-and-onestep-estimator)
+- [4 Details on Estimation via TMLE estimator and onestep
+  estimator](#4-details-on-estimation-via-tmle-estimator-and-onestep-estimator)
   - [4.1 The Onestep Estimator](#41-the-onestep-estimator)
   - [4.2 The TMLE](#42-the-tmle)
 - [5 Output](#5-output)
@@ -225,7 +225,7 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
     ## 
     ##  The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
 
-# 4 Estimation via TMLE estimator and onestep estimator
+# 4 Details on Estimation via TMLE estimator and onestep estimator
 
 ## 4.1 The Onestep Estimator
 
@@ -263,11 +263,9 @@ The code below is an example of adopting SuperLearner with
 cross-fitting:
 
 ``` r
-est <- ADMGtmle(a=c(1,0),data=data_example_a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')),
+est <- ADMGtmle(a=c(1,0),
+                data=data_example_a, 
+                graph = graph_a,
                 lib.seq = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.Y = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.A = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
@@ -319,11 +317,9 @@ The code below is an example of using the `dnorm` method for the density
 ratio estimation for variables in $M\backslash Y$:
 
 ``` r
-est <- ADMGtmle(a=c(1,0),data=data_example_a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')),
+est <- ADMGtmle(a=c(1,0),
+                data=data_example_a, 
+                graph = graph_a,
                 ratio.method.M = "dnorm")
 ```
 
@@ -333,11 +329,10 @@ As an example, we `ADMGtmle()` to estimate the average counterfactual
 outcome $E(Y^1)$. The output is described as follows
 
 ``` r
-est <- ADMGtmle(a=1,data=data_example_a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')))
+est <- ADMGtmle(a=1,
+                data=data_example_a, 
+                graph = graph_a,
+                treatment='A', outcome='Y')
 
 # TMLE and Onestep estimator
 est$TMLE # a list contains the estimation result from TMLE estimator
@@ -369,10 +364,10 @@ described as follows:
   code:
 
 ``` r
-graph <- make.graph(vertices=c('A','M','L','Y','X'),
-bi_edges=list(c('A','Y')),
-di_edges=list(c('X','A'), c('X','M'), c('X','L'),
-c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')))
+graph_a <- make.graph(vertices=c('A','M','L','Y','X'), # specify the vertices
+                bi_edges=list(c('A','Y')), # specify the bi-directed edges
+                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')), # specify the directed edges, with each pair of variables indicating an directed edge from the first variable to the second. For example, c('X', 'A') represents a directed edge from X to A.
+                multivariate.variables = list(M=c('M.1','M.2'))) # specify the components of the multivariate variable M
 ```
 
 - `f.adj_matrix`: return the adjacency matrix of the graph. For example,
@@ -380,13 +375,13 @@ c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')))
   (a), we can use the following code:
 
 ``` r
-f.adj_matrix(graph)
+f.adj_matrix(graph_a)
 ```
 
 - `f.top_order`: return the topological ordering of the graph.
 
 ``` r
-f.top_order(graph)
+f.top_order(graph_a)
 ```
 
 - `f.parents`: return the parents of a given vertex or vertices in the
@@ -394,7 +389,7 @@ f.top_order(graph)
   object for the ADMG in Figure (a), we can use the following code:
 
 ``` r
-f.parents(graph, 'Y')
+f.parents(graph_a, 'Y')
 ```
 
 - `f.children`: return the children of a given vertex or vertices in the
@@ -402,7 +397,7 @@ f.parents(graph, 'Y')
   object for the ADMG in Figure (a), we can use the following code:
 
 ``` r
-f.children(graph, 'A')
+f.children(graph_a, 'A')
 ```
 
 - `f.descendants`: return the descendants of a given vertex or vertices
@@ -411,7 +406,7 @@ f.children(graph, 'A')
   code:
 
 ``` r
-f.descendants(graph, 'A')
+f.descendants(graph_a, 'A')
 ```
 
 - `f.district`: return the district of a given vertex or vertices in the
@@ -419,13 +414,13 @@ f.descendants(graph, 'A')
   object for the ADMG in Figure (a), we can use the following code:
 
 ``` r
-f.district(graph, 'A')
+f.district(graph_a, 'A')
 ```
 
 - `cnt.districts`: return the number of districts in the graph.
 
 ``` r
-cnt.districts(graph)
+cnt.districts(graph_a)
 ```
 
 - `f.markov_blanket`: return the Markov blanket of a given vertex or
@@ -434,7 +429,7 @@ cnt.districts(graph)
   the following code:
 
 ``` r
-f.markov_blanket(graph, 'A')
+f.markov_blanket(graph_a, 'A')
 ```
 
 - `f.markov_pillow`: return the Markov pillow of a given vertex or
@@ -443,7 +438,7 @@ f.markov_blanket(graph, 'A')
   following code:
 
 ``` r
-f.markov_pillow(graph, 'A')
+f.markov_pillow(graph_a, 'A')
 ```
 
 - `is.p.fix`: return whether a treatment variable is primal fixable in a
@@ -452,7 +447,7 @@ f.markov_pillow(graph, 'A')
   can use the following code:
 
 ``` r
-is.p.fix(graph, 'A')
+is.p.fix(graph_a, 'A')
 ```
 
 If the treatment is primal fixable, then the average causal effect of
@@ -464,7 +459,7 @@ identified.
   is NP-saturated, we can use the following code:
 
 ``` r
-is.np.saturated(graph)
+is.np.saturated(graph_a)
 ```
 
 A graph being nonparametrically saturated means that the graph implies
@@ -475,7 +470,7 @@ NO equality constraints on the observed data distribution.
   following code:
 
 ``` r
-is.mb.shielded(graph)
+is.mb.shielded(graph_a)
 ```
 
 A graph being mb-shielded means that the graph only implies ordinary

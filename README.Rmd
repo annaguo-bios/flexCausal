@@ -138,7 +138,7 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
                 treatment='A', outcome='Y')
 ```
 
-# Estimation via TMLE estimator and onestep estimator
+# Details on Estimation via TMLE estimator and onestep estimator
 
 ## The Onestep Estimator
 In implementing the onestep estimator, we use the trick of sequential regression. For example, in the above example (a), the onestep estimator involves a nuisance $E\left[E(Y|L, M,a_1,X)\right | M,a_0,X]$, where $a_1=1-a$, $a_0=a$, and $a$ is the level of intervention of treatment $A$. To estimate this nuisance, we would first fit a regression model of $Y$ on $L, M, A, X$ to get and estimate $\hat{E}(Y|L, M,a_1,X)$ and then fit a regression model of $\hat{E}(Y|L, M,a_1,X)$ on $L, M, A, X$. We offer three options for the regression model: (1) via simple linear or logistic regression, (2) via SuperLearner, and (3) via SuperLearner together with cross-fitting. Below we elaborate on the three options:
@@ -151,11 +151,9 @@ The code below is an example of adopting SuperLearner with cross-fitting:
 
 ```{r, onestep-eg, warning=F, message=F, eval=F}
 
-est <- ADMGtmle(a=c(1,0),data=data_example_a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')),
+est <- ADMGtmle(a=c(1,0),
+                data=data_example_a, 
+                graph = graph_a,
                 lib.seq = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.Y = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.A = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
@@ -174,11 +172,9 @@ The code below is an example of using the `dnorm` method for the density ratio e
 
 ```{r, tmle-eg, warning=F, message=F, eval=F}
 
-est <- ADMGtmle(a=c(1,0),data=data_example_a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')),
+est <- ADMGtmle(a=c(1,0),
+                data=data_example_a, 
+                graph = graph_a,
                 ratio.method.M = "dnorm")
 ```
 
@@ -187,11 +183,10 @@ As an example, we `ADMGtmle()` to estimate the average counterfactual outcome $E
 
 ```{r, output, eval=F}
 
-est <- ADMGtmle(a=1,data=data_example_a, vertices=c('A','M','L','Y','X'),
-                bi_edges=list(c('A','Y')),
-                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-                treatment='A', outcome='Y',
-                multivariate.variables = list(M=c('M1','M2')))
+est <- ADMGtmle(a=1,
+                data=data_example_a, 
+                graph = graph_a,
+                treatment='A', outcome='Y')
 
 # TMLE and Onestep estimator
 est$TMLE # a list contains the estimation result from TMLE estimator
@@ -220,77 +215,77 @@ Apart from the `ADMGtmle()` for causal effec estimation, we also provide functio
 
 ```{r, make-graph, warning=F, message=F, eval=F}
 
-graph <- make.graph(vertices=c('A','M','L','Y','X'),
-bi_edges=list(c('A','Y')),
-di_edges=list(c('X','A'), c('X','M'), c('X','L'),
-c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')))
+graph_a <- make.graph(vertices=c('A','M','L','Y','X'), # specify the vertices
+                bi_edges=list(c('A','Y')), # specify the bi-directed edges
+                di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')), # specify the directed edges, with each pair of variables indicating an directed edge from the first variable to the second. For example, c('X', 'A') represents a directed edge from X to A.
+                multivariate.variables = list(M=c('M.1','M.2'))) # specify the components of the multivariate variable M
 
 ```
 
 - `f.adj_matrix`: return the adjacency matrix of the graph. For example, to get the adjacency matrix of the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-adj-matrix, warning=F, message=F, eval=F}
-f.adj_matrix(graph)
+f.adj_matrix(graph_a)
 ```
 
 - `f.top_order`: return the topological ordering of the graph.
 
 ```{r, f-top-order, warning=F, message=F, eval=F}
-f.top_order(graph)
+f.top_order(graph_a)
 ```
 
 - `f.parents`: return the parents of a given vertex or vertices in the graph. For example, to get the parents of vertex `Y` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-parents, warning=F, message=F, eval=F}
-f.parents(graph, 'Y')
+f.parents(graph_a, 'Y')
 ```
 
 - `f.children`: return the children of a given vertex or vertices in the graph. For example, to get the children of vertex `A` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-children, warning=F, message=F, eval=F}
-f.children(graph, 'A')
+f.children(graph_a, 'A')
 
 ```
 
 - `f.descendants`: return the descendants of a given vertex or vertices in the graph. For example, to get the descendants of vertex `A` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-descendants, warning=F, message=F, eval=F}
-f.descendants(graph, 'A')
+f.descendants(graph_a, 'A')
 
 ```
 
 - `f.district`: return the district of a given vertex or vertices in the graph. For example, to get the district of vertex `A` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-district, warning=F, message=F, eval=F}
-f.district(graph, 'A')
+f.district(graph_a, 'A')
 
 ```
 
 - `cnt.districts`: return the number of districts in the graph.
 
 ```{r, cnt-districts, warning=F, message=F, eval=F}
-cnt.districts(graph)
+cnt.districts(graph_a)
 
 ```
 
 - `f.markov_blanket`: return the Markov blanket of a given vertex or vertices in the graph. For example, to get the Markov blanket of vertex `A` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-markov-blanket, warning=F, message=F, eval=F}
-f.markov_blanket(graph, 'A')
+f.markov_blanket(graph_a, 'A')
 
 ```
 
 - `f.markov_pillow`: return the Markov pillow of a given vertex or vertices in the graph. For example, to get the Markov pillow of vertex `A` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-markov-pillow, warning=F, message=F, eval=F}
-f.markov_pillow(graph, 'A')
+f.markov_pillow(graph_a, 'A')
 
 ```
 
 - `is.p.fix`: return whether a treatment variable is primal fixable in a graph object. For example, to check whether the treatment variable `A` is primal fixable in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, is-p-fix, warning=F, message=F, eval=F}
-is.p.fix(graph, 'A')
+is.p.fix(graph_a, 'A')
 ```
 
 If the treatment is primal fixable, then the average causal effect of the treatment on any choice of the outcome in the given graph is always identified.
@@ -298,7 +293,7 @@ If the treatment is primal fixable, then the average causal effect of the treatm
 - `is.np.saturated`: return whether a graph object is NP-saturated. For example, to check whether the graph object for the ADMG in Figure (a) is NP-saturated, we can use the following code:
 
 ```{r, is-np-saturated, warning=F, message=F, eval=F}
-is.np.saturated(graph)
+is.np.saturated(graph_a)
 
 ```
 
@@ -307,7 +302,7 @@ A graph being nonparametrically saturated means that the graph implies NO equali
 - `is.mb.shielded`: return whether a graph is mb-shielded. For example, to check whether ADMG in Figure (a) is shielded, we can use the following code:
 
 ```{r, is-mb-shielded, warning=F, message=F, eval=F}
-is.mb.shielded(graph)
+is.mb.shielded(graph_a)
 
 ```
 
