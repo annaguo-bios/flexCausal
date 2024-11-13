@@ -209,6 +209,7 @@ The code below is an example of adopting SuperLearner with cross-fitting:
 est <- ADMGtmle(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
+                treatment='A', outcome='Y'
                 lib.seq = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.Y = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.A = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
@@ -273,6 +274,7 @@ The code below is an example of using the `dnorm` method for the density ratio e
 est <- ADMGtmle(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
+                treatment='A', outcome='Y',
                 ratio.method.M = "dnorm")
 ```
 

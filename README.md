@@ -536,6 +536,7 @@ cross-fitting:
 est <- ADMGtmle(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
+                treatment='A', outcome='Y'
                 lib.seq = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.Y = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.A = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
@@ -740,17 +741,18 @@ ratio estimation for variables in $M\backslash Y$:
 est <- ADMGtmle(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
+                treatment='A', outcome='Y',
                 ratio.method.M = "dnorm")
 ```
 
 ## 4.3 The Onestep estimator
 
 To construct the Onestep estimator, the `ADMGtmle()` function estimates
-all the sequential regressions and the density ratios discussed above.
-These nuisance estimates are then used to construct an EIF estimate as
-well as the EIF-based Onestep estimator for the target parameter. The
-EIF estimate is further used to construct the confidence interval for
-the Onestep estimator.
+all the sequential regressions and density ratios discussed above. These
+nuisance estimates are then used to construct an EIF estimate as well as
+the EIF-based Onestep estimator for the target parameter. The EIF
+estimate is further used to construct the confidence interval for the
+Onestep estimator.
 
 The function `ADMGtmle()` provides Onestep estimator by default.
 
