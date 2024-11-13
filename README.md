@@ -5,10 +5,11 @@ Unmeasured Variables
 - [1 Installation](#1-installation)
 - [2 A Brief Introduction to ADMGs](#2-a-brief-introduction-to-admgs)
 - [3 Quick Start on Estimation](#3-quick-start-on-estimation)
-- [4 Details on Estimation via TMLE estimator and onestep
-  estimator](#4-details-on-estimation-via-tmle-estimator-and-onestep-estimator)
-  - [4.1 The Onestep Estimator](#41-the-onestep-estimator)
-  - [4.2 The TMLE](#42-the-tmle)
+- [4 Details on Estimation via Onestep Estimator and
+  TMLE](#4-details-on-estimation-via-onestep-estimator-and-tmle)
+  - [4.1 Sequential Regressions](#41-sequential-regressions)
+  - [4.2 Density Ratios](#42-density-ratios)
+  - [4.3 The TMLE](#43-the-tmle)
 - [5 Output](#5-output)
 - [6 Functions for learning the properties of
   ADMG](#6-functions-for-learning-the-properties-of-admg)
@@ -220,39 +221,300 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
     ## 
     ##  The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
 
-# 4 Details on Estimation via TMLE estimator and onestep estimator
+# 4 Details on Estimation via Onestep Estimator and TMLE
 
-## 4.1 The Onestep Estimator
+<img src="nuisances.jpeg" style="width:100.0%" /> The package constructs
+the EIF based onestep estimator and TMLE for ACE through break down the
+EIF into several nuisance parameters, which falls into two categories:
+the <span style="color:deeppink">sequential regressions</span> and
+<span style="color:deeppink">density ratios</span>. The figure above
+illustrates the decomposition of the EIF into the nuisance parameters
+using the ADMG in example (a) above.
 
-In implementing the onestep estimator, we use the trick of sequential
-regression. For example, in the above example (a), the onestep estimator
-involves a nuisance $E\left[E(Y|L, M,a_1,X)\right | M,a_0,X]$, where
-$a_1=1-a$, $a_0=a$, and $a$ is the level of intervention of treatment
-$A$. To estimate this nuisance, we would first fit a regression model of
-$Y$ on $L, M, A, X$ to get and estimate $\hat{E}(Y|L, M,a_1,X)$ and then
-fit a regression model of $\hat{E}(Y|L, M,a_1,X)$ on $L, M, A, X$. We
-offer three options for the regression model: (1) via simple linear or
-logistic regression, (2) via SuperLearner, and (3) via SuperLearner
-together with cross-fitting. Below we elaborate on the three options:
+To define these nuisance parameters, it is essential to learn the
+properties of the ADMG. Specifically, we require three definitions:  
+1. A topological ordering $\tau$ for variables in the ADMG.
 
-- Option 1: Simple linear or logistic regression. The function offers
-  `formulaY` and `formulaA` to specify the regression model for the
-  outcome regression and propensity score regression, respectively. It
-  further allow users to specify the link function for the outcome
-  regression and propensity score regression via `linkY_binary` and
-  `linkA`, respectively. Note that `linkY_binary` is only effective when
-  the outcome is a binary variable.
+2.  A set $\mathcal{L}$ that contains all the variables that is post the
+    treatment variable according to $\tau$ and is bidirectedly connected
+    to the treatment variable.
+
+3.  A set $\mathcal{M}$ that contains all the variables that is post the
+    treatment variable according to $\tau$ and is not in $\mathcal{L}$.
+
+The **sequential regressions** are defined for the treatment variable
+$A$ the outcome variable $Y$ and all the variables between $A$ and $Y$
+in $\tau$. Introducing set $\mathcal{L}$ and $\mathcal{M}$ is important
+because $A$ at those sequential regressions is evaluated at specific
+level determined by which set the corresponding variable belongs to.
+
+The **density ratios** are defined for the treatment variable $A$ and
+all the variables between $A$ and $Y$ in $\tau$. Each density ratio is
+defined as the ratio of conditional density of a variable. Evaluation of
+$A$ at these density ratios also depends on which set the corresponding
+variable belongs to.
+
+## 4.1 Sequential Regressions
+
+For the sequential regressions, we offer three options for estimation:
+(1) via linear or logistic regression, (2) via , and (3) via together
+with cross-fitting. - Option 1: Linear or logistic regression. The
+function offers `formulaY` and `formulaA` to specify the regression
+model related to outcome $Y$ and treatment $A$, respectively. Users to
+further specify the link function for these regressions via
+`linkY_binary` and `linkA`, respectively. Note that `linkY_binary` is
+only effective when the outcome is binary. The sequential regressions
+for other variables are fitted via simple linear regression or logistic
+regressions without interaction and higher order terms.
+
 - Option 2: SuperLearner. The function offers `superlearner.seq`,
   `superlearner.Y`, and `superlearner.A`, to specify whether to use
   SuperLearner for the sequential regression, outcome regression, and
-  propensity score regression, respectively. The user can further
-  specify the library of SuperLearner via `library.seq`, `library.Y`,
-  `library.A`, respectively.
+  treatment regression, respectively. The user can further specify the
+  library of SuperLearner via `library.seq`, `library.Y`, `library.A`,
+  respectively.
+
 - Option 3: SuperLearner with cross-fitting. The function offers
   `crossfit` to specify whether to use cross-fitting in SuperLearner.
-  The user can further specify the number of folds in cross-fitting via
+  Users can further specify the number of folds in cross-fitting via
   `K`. The library of SuperLearner is still specified via `library.seq`,
   `library.Y`, `library.A`, respectively.
+
+Here we offer a table summary of available methods for sequential
+regressions.
+
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+
+Sequential Regressions Estimation Method Details
+
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;font-weight: bold;">
+
+Estimation Method
+
+</th>
+<th style="text-align:left;font-weight: bold;">
+
+Arguments
+
+</th>
+<th style="text-align:left;font-weight: bold;">
+
+Explanations
+
+</th>
+</tr>
+</thead>
+<tbody>
+<tr grouplength="4">
+<td colspan="3" style="border-bottom: 1px solid;">
+
+<strong>Linear or logistic regressions</strong>
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`formulaY`
+
+</td>
+<td style="text-align:left;">
+
+Formula for outcome regression
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`formulaA`
+
+</td>
+<td style="text-align:left;">
+
+Formula for treatment regression
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`linkY_binary`
+
+</td>
+<td style="text-align:left;">
+
+Link function for binary outcome Y in logistic regression
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`linkA`
+
+</td>
+<td style="text-align:left;">
+
+Link function for binary outcome A in logistic regression
+
+</td>
+</tr>
+<tr grouplength="6">
+<td colspan="3" style="border-bottom: 1px solid;">
+
+<strong>SuperLearner</strong>
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`superlearner.seq`
+
+</td>
+<td style="text-align:left;">
+
+Whether to use SuperLearner for variables between $A$ and $Y$
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`superlearner.Y`
+
+</td>
+<td style="text-align:left;">
+
+Whether to use SuperLearner for outcome Y
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`superlearner.A`
+
+</td>
+<td style="text-align:left;">
+
+Whether to use SuperLearner for outcome A
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`library.seq`
+
+</td>
+<td style="text-align:left;">
+
+Library of learners for variables between $A$ and $Y$
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`library.Y`
+
+</td>
+<td style="text-align:left;">
+
+Library of learners for $Y$
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`library.A`
+
+</td>
+<td style="text-align:left;">
+
+Library of learners for $A$
+
+</td>
+</tr>
+<tr grouplength="3">
+<td colspan="3" style="border-bottom: 1px solid;">
+
+<strong>SuperLearner with cross-fitting</strong>
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`crossfit`
+
+</td>
+<td style="text-align:left;">
+
+Whether to use cross-fitting along with SuperLearner
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`K`
+
+</td>
+<td style="text-align:left;">
+
+Number of folds in cross-fitting
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+</td>
+<td style="text-align:left;">
+
+`library.xxx`
+
+</td>
+<td style="text-align:left;">
+
+Library of SuperLearner is still specified via `library.seq`,
+`library.Y`, `library.A`, respectively
+
+</td>
+</tr>
+</tbody>
+</table>
 
 The code below is an example of adopting SuperLearner with
 cross-fitting:
@@ -268,45 +530,195 @@ est <- ADMGtmle(a=c(1,0),
                 K=5)
 ```
 
-## 4.2 The TMLE
+## 4.2 Density Ratios
 
-In implementing the TMLE estimator,apart from sequential regression, we
-also need to estimate density ratios. For example, in the above example
-(a), the TMLE estimator involves a nuisance $p(M|a_0,X)/p(M|a_1,X)$. We
-need to estimate the density ratio for two sets of variables. Let $C$ be
-the set of pre-treatment variables, let $L$ be the set of variables that
-are connect with treatment $A$ via bidirected edges, and let $M$ be the
-set of variables that is not in either $C$ or $L$. We need to estimate
-the density ratio for variables in $L\backslash A,Y$ and
-$M\backslash Y$. We offer three options for the density ratio
-estimation: (1) via the package, (2) via Bayes rule, and (3) via
-assuming normal distribution for continuous varialbes. Below we
-elaborate on the three options:
+For the density ratios, we provide three options for estimation: (1) via
+direct estimation using the `densratio` package, (2) via Bayes’ rule,
+and (3) via assuming the density follows a Normal distribution. Note
+that these methods only apply to the variables between $A$ and $Y$ in
+$\tau$. It doesn’t apply to $A$ since the treatment regression is
+already estimated in the sequential regressions.
 
 - Option 1: The package. The function calls the package to estimate the
-  density ratio for variables in $L\backslash A,Y$ or $M\backslash Y$ if
+  density ratio for variables in $\mathcal{L}$ or $\mathcal{M}$ if
   `ratio.method.L="densratio"` or `ratio.method.M="densratio"`,
   respectively.
-- Option 2: Bayes rule. The function estimates the density ratio for
-  variables in $L\backslash A,Y$ or $M\backslash Y$ via Bayes rule if
+
+- Option 2: Bayes rule. The function estimates the density ratios for
+  variables in $\mathcal{L}$ or $\mathcal{M}$ via Bayes’ rule if
   `ratio.method.L="bayes"` or `ratio.method.M="bayes"`, respectively.
-  For example, the bayes rule method estimate $p(M|a_0,X)/p(M|a_1,X)$ by
-  rewriting it as $[p(a_0|M,X)/p(a_1|M,X)]/[p(a_0|X)/p(a_1|X)]$.
-  $p(A|M,X)$ is then estimated via the three options as discussed under
-  the onestep estimator section. We use `superlearner.M` and
-  `superlearner.L` to specify whether to use SuperLearner for the
-  density ratio estimation for variables in $M\backslash Y$ and
-  $L\backslash A,Y$, respectively. The user can further specify the
-  library of SuperLearner via `lib.M` and `lib.L`, respectively.
-- Option 3: Assuming normal distribution for continuous variables. The
-  function estimates the density ratio for variables in
-  $L\backslash A,Y$ or $M\backslash Y$ via assuming normal distribution
-  if `ratio.method.L="dnorm"` or `ratio.method.M="dnorm"`, respectively.
-  The mean of the normal distribution is estimated via linear
-  regression, and the variance is estimated via the sample variance of
-  the error term from the regression model. Note that we assume the
-  linear regression only involve first order terms, and we do not
-  consider interaction terms.
+  For example, the Bayes’ rule method estimate $p(M|a_0,X)/p(M|a_1,X)$
+  by using the following formula: $$
+  \begin{align*}
+  \frac{p(M|a_0,X)}{p(M|a_1,X)} = \frac{p(a_0|M,X)p(M|X)}{p(a_1|M,X)p(M|X)} = \frac{p(a_0|M,X)}{p(a_1|M,X)}.
+  \end{align*}
+  $$
+
+The regressions involved in this Bayes’ formula are estimated following
+the arguments discussed for sequential regressions.
+
+- Option 3: Normal distribution. The function estimates the density
+  ratio for variables in $\mathcal{L}$ or $\mathcal{M}$ via assuming
+  normal distribution if `ratio.method.L="dnorm"` or
+  `ratio.method.M="dnorm"`, respectively. The mean of the Normal
+  distribution is estimated via linear regression, and the variance is
+  estimated via the sample variance of the error term from the
+  regression model. Users can specify the formulas for the linear
+  regression for variables in $\mathcal{L}$ and $\mathcal{M}$ via
+  `dnorm.formula.L` and `dnorm.formula.M`. For example,
+  `dnorm.formula.M=list(M = "M ~ A + X + I(A*X)")`.
+
+Here we offer a table summary of available methods for density ratios.
+
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+
+Density Ratios Estimation Method Details
+
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;font-weight: bold;">
+
+Estimation Method
+
+</th>
+<th style="text-align:left;font-weight: bold;">
+
+Arguments
+
+</th>
+<th style="text-align:left;font-weight: bold;">
+
+Explanations
+
+</th>
+</tr>
+</thead>
+<tbody>
+<tr grouplength="2">
+<td colspan="3" style="border-bottom: 1px solid;">
+
+<strong>`densratio` package</strong>
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+
+`ratio.method.L="densratio"`
+
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+
+Use `densratio` package to estimate the density ratio for variables in
+$\mathcal{L}$
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+
+`ratio.method.M="densratio"`
+
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+
+Use `densratio` package to estimate the density ratio for variables in
+$\mathcal{M}$
+
+</td>
+</tr>
+<tr grouplength="2">
+<td colspan="3" style="border-bottom: 1px solid;">
+
+<strong>Bayes’ rule</strong>
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+
+`ratio.method.L="bayes"`
+
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+
+Apply the Bayes’ rule to estimate the density ratio for variables in
+$\mathcal{L}$
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+
+`ratio.method.M="bayes"`
+
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+
+Apply the Bayes’ rule to estimate the density ratio for variables
+in$\mathcal{M}$
+
+</td>
+</tr>
+<tr grouplength="2">
+<td colspan="3" style="border-bottom: 1px solid;">
+
+<strong>Normal distribution</strong>
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+
+`ratio.method.L="dnorm"`
+
+</td>
+<td style="text-align:left;">
+
+`dnorm.formula.L`
+
+</td>
+<td style="text-align:left;">
+
+Assuming Normal distributions to estimate the density ratio for
+variables in $\mathcal{L}$. The mean of the Normal distributions are
+estimated via fitting regressions following formula specified in
+`dnorm.formula.L`
+
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+
+`ratio.method.M="dnorm"`
+
+</td>
+<td style="text-align:left;">
+
+`dnorm.formula.M`
+
+</td>
+<td style="text-align:left;">
+
+Assuming Normal distributions to estimate the density ratio for
+variables in $\mathcal{M}$. The mean of the Normal distributions are
+estimated via fitting regressions following formula specified in
+`dnorm.formula.M`
+
+</td>
+</tr>
+</tbody>
+</table>
 
 The code below is an example of using the `dnorm` method for the density
 ratio estimation for variables in $M\backslash Y$:
@@ -317,6 +729,26 @@ est <- ADMGtmle(a=c(1,0),
                 graph = graph_a,
                 ratio.method.M = "dnorm")
 ```
+
+## 4.3 The TMLE
+
+To construct TMLE, we update the estimated nuisance parameters via a
+targeting procedure such that the corresponding part of the EIF for each
+variable is sufficiently small. Sometimes, the targeting procedure
+requires iterative updates between nuisance parameters. The function
+`ADMGtmle()` provides several arguments to control for this iterative
+process:
+
+- `n.iter` specifys the max number of iterations for the targeting
+  procedure. The default value is 500.
+
+- `cvg.criteria` specifies how small the sample mean of the EIF piece
+  for each variable should be to stop the iterative process. The
+  recommendation is $n^{-1/2}$, where $n$ is the sample size.
+
+- `truncate_lower` and `truncate_upper` specify the lower and upper
+  bounds to truncate $p(A=a\mid X)$, for $a\in\{0,1\}$. This helps avoid
+  extreme values of the estimated propensity score.
 
 # 5 Output
 
