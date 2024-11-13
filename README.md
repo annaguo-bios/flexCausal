@@ -550,9 +550,11 @@ already estimated in the sequential regressions.
   variables in $\mathcal{L}$ or $\mathcal{M}$ via Bayes’ rule if
   `ratio.method.L="bayes"` or `ratio.method.M="bayes"`, respectively.
   For example, the Bayes’ rule method estimate $p(M|a_0,X)/p(M|a_1,X)$
-  by using the following formula: $$
-  \frac{p(M|a_0,X)}{p(M|a_1,X)} = \frac{p(a_0|M,X)p(M|X)}{p(a_1|M,X)p(M|X)} = \frac{p(a_0|M,X)}{p(a_1|M,X)}.
-  $$
+  by using the following formula:
+
+$$
+\frac{p(M|a_0,X)}{p(M|a_1,X)} = \frac{p(a_0|M,X)p(M|X)}{p(a_1|M,X)p(M|X)} = \frac{p(a_0|M,X)}{p(a_1|M,X)}.
+$$
 
 The regressions involved in this Bayes’ formula are estimated following
 the arguments discussed for sequential regressions.

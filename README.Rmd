@@ -217,7 +217,9 @@ For the density ratios, we provide three options for estimation: (1) via direct 
 
 - Option 1: The \link[densratio]{densratio} package. The function calls the \link[densratio]{densratio} package to estimate the density ratio for variables in $\mathcal{L}$ or $\mathcal{M}$ if `ratio.method.L="densratio"` or `ratio.method.M="densratio"`, respectively.
 
-- Option 2: Bayes rule. The function estimates the density ratios for variables in $\mathcal{L}$ or $\mathcal{M}$ via Bayes' rule if `ratio.method.L="bayes"` or `ratio.method.M="bayes"`, respectively. For example, the Bayes' rule method estimate $p(M|a_0,X)/p(M|a_1,X)$ by using the following formula:
+- Option 2: Bayes rule. The function estimates the density ratios for variables in $\mathcal{L}$ or $\mathcal{M}$ via Bayes' rule if `ratio.method.L="bayes"` or `ratio.method.M="bayes"`, respectively. For example, the Bayes' rule method estimate $p(M|a_0,X)/p(M|a_1,X)$ by using the following formula:  
+
+
 $$
 \frac{p(M|a_0,X)}{p(M|a_1,X)} = \frac{p(a_0|M,X)p(M|X)}{p(a_1|M,X)p(M|X)} = \frac{p(a_0|M,X)}{p(a_1|M,X)}.
 $$
