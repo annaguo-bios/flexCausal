@@ -749,13 +749,15 @@ process:
   recommendation is $n^{-1/2}$, where $n$ is the sample size.
 
 - `truncate_lower` and `truncate_upper` specify the lower and upper
-  bounds to truncate $p(A=a\mid X)$, for $a\in\{0,1\}$. This helps avoid
-  extreme values of the estimated propensity score.
+  bounds to truncate $p(A=a\mid X)$, for
+  <a href="https://www.codecogs.com/eqnedit.php?latex=a%20\in%20%7B0%2C1%7D" target="_blank">
+  $a \in \{0, 1\}$ </a>. This helps avoid extreme values of the
+  estimated propensity score.
 
 # 5 Output
 
-As an example, we `ADMGtmle()` to estimate the average counterfactual
-outcome $E(Y^1)$. The output is described as follows
+As an example, we use `ADMGtmle()` to estimate the average
+counterfactual outcome $E(Y^1)$. The output is described as follows
 
 ``` r
 est <- ADMGtmle(a=1,
