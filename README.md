@@ -9,7 +9,8 @@ Unmeasured Variables
   TMLE](#4-details-on-estimation-via-onestep-estimator-and-tmle)
   - [4.1 Sequential Regressions](#41-sequential-regressions)
   - [4.2 Density Ratios](#42-density-ratios)
-  - [4.3 The TMLE](#43-the-tmle)
+  - [4.3 The Onestep estimator](#43-the-onestep-estimator)
+  - [4.4 The TMLE](#44-the-tmle)
 - [5 Output](#5-output)
 - [6 Functions for learning the properties of
   ADMG](#6-functions-for-learning-the-properties-of-admg)
@@ -224,16 +225,26 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
 # 4 Details on Estimation via Onestep Estimator and TMLE
 
 <img src="nuisances.jpeg" style="width:100.0%" /> The package constructs
-the EIF based onestep estimator and TMLE for ACE through break down the
-EIF into several nuisance parameters, which falls into two categories:
-the <span style="color:deeppink">sequential regressions</span> and
-<span style="color:deeppink">density ratios</span>. The figure above
-illustrates the decomposition of the EIF into the nuisance parameters
-using the ADMG in example (a) above.
+the EIF based **Onestep estimator** and **TMLE** for ACE through break
+down the EIF into several nuisance parameters, which falls into two
+categories: the <span style="color:deeppink">sequential
+regressions</span> and <span style="color:deeppink">density
+ratios</span>. The figure above illustrates the decomposition of the EIF
+into the nuisance parameters using the ADMG in example (a) above.
 
 To define these nuisance parameters, it is essential to learn the
 properties of the ADMG. Specifically, we require three definitions:  
-1. A topological ordering $\tau$ for variables in the ADMG.
+1. A topological ordering $\tau$ for variables in the ADMG. With a graph
+oject, $\tau$ can be obtained using the `f.top_order()` function. See
+[Functions for learning the properties of
+ADMG](#6-functions-for-learning-the-properties-of-admg) for more
+details.
+
+``` r
+f.top_order(graph_a)
+```
+
+    ## [1] "X" "A" "M" "L" "Y"
 
 2.  A set $\mathcal{L}$ that contains all the variables that is post the
     treatment variable according to $\tau$ and is bidirectedly connected
@@ -732,7 +743,18 @@ est <- ADMGtmle(a=c(1,0),
                 ratio.method.M = "dnorm")
 ```
 
-## 4.3 The TMLE
+## 4.3 The Onestep estimator
+
+To construct the Onestep estimator, the `ADMGtmle()` function estimates
+all the sequential regressions and the density ratios discussed above.
+These nuisance estimates are then used to construct an EIF estimate as
+well as the EIF-based Onestep estimator for the target parameter. The
+EIF estimate is further used to construct the confidence interval for
+the Onestep estimator.
+
+The function `ADMGtmle()` provides Onestep estimator by default.
+
+## 4.4 The TMLE
 
 To construct TMLE, we update the estimated nuisance parameters via a
 targeting procedure such that the corresponding part of the EIF for each
