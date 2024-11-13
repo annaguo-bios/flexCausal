@@ -258,14 +258,16 @@ variable belongs to.
 
 For the sequential regressions, we offer three options for estimation:
 (1) via linear or logistic regression, (2) via , and (3) via together
-with cross-fitting. - Option 1: Linear or logistic regression. The
-function offers `formulaY` and `formulaA` to specify the regression
-model related to outcome $Y$ and treatment $A$, respectively. Users to
-further specify the link function for these regressions via
-`linkY_binary` and `linkA`, respectively. Note that `linkY_binary` is
-only effective when the outcome is binary. The sequential regressions
-for other variables are fitted via simple linear regression or logistic
-regressions without interaction and higher order terms.
+with cross-fitting.
+
+- Option 1: Linear or logistic regression. The function offers
+  `formulaY` and `formulaA` to specify the regression model related to
+  outcome $Y$ and treatment $A$, respectively. Users to further specify
+  the link function for these regressions via `linkY_binary` and
+  `linkA`, respectively. Note that `linkY_binary` is only effective when
+  the outcome is binary. The sequential regressions for other variables
+  are fitted via simple linear regression or logistic regressions
+  without interaction and higher order terms.
 
 - Option 2: SuperLearner. The function offers `superlearner.seq`,
   `superlearner.Y`, and `superlearner.A`, to specify whether to use

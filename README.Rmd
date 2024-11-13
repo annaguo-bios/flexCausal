@@ -157,7 +157,8 @@ The **sequential regressions** are defined for the treatment variable $A$ the ou
 The **density ratios** are defined for the treatment variable $A$ and all the variables between $A$ and $Y$ in $\tau$. Each density ratio is defined as the ratio of conditional density of a variable. Evaluation of $A$ at these density ratios also depends on which set the corresponding variable belongs to.
 
 ## Sequential Regressions
-For the sequential regressions, we offer three options for estimation: (1) via linear or logistic regression, (2) via \texttt{SuperLearner}, and (3) via \texttt{SuperLearner} together with cross-fitting. 
+For the sequential regressions, we offer three options for estimation: (1) via linear or logistic regression, (2) via \texttt{SuperLearner}, and (3) via \texttt{SuperLearner} together with cross-fitting.  
+
 - Option 1: Linear or logistic regression. The function offers `formulaY` and `formulaA` to specify the regression model related to outcome $Y$ and treatment $A$, respectively. Users to further specify the link function for these regressions via `linkY_binary` and `linkA`, respectively. Note that `linkY_binary` is only effective when the outcome is binary. The sequential regressions for other variables are fitted via simple linear regression or logistic regressions without interaction and higher order terms.
 
 - Option 2: SuperLearner. The function offers `superlearner.seq`, `superlearner.Y`, and `superlearner.A`, to specify whether to use SuperLearner for the sequential regression, outcome regression, and treatment regression, respectively. The user can further specify the library of SuperLearner via `library.seq`, `library.Y`, `library.A`, respectively.
