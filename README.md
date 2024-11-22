@@ -23,7 +23,7 @@ edges—as input and provides causal effect estimates using robust
 influence-function-based estimators developed in [this
 paper](http://www.arxiv.org/pdf/2409.03962).
 
-<img src="background.png" style="width:100.0%" />
+<img src="pics/background.png" style="width:100.0%" />
 
 > The package asks for the following **inputs** from the user:
 >
@@ -53,7 +53,7 @@ paper](http://www.arxiv.org/pdf/2409.03962).
 Here’s a schematic view of what `flexCausal` is capable of and how it
 works:
 
-![](pkg.jpg)
+![](pics/pkg.png)
 
 If you find this package useful, please cite: [this
 paper](http://www.arxiv.org/pdf/2409.03962)
@@ -100,7 +100,7 @@ projection is guided by the following rules:
 
 See Examples (a) and (b), where the DAGs with unmeasured variables on
 the left are projected onto their corresponding ADMGs on the right:
-![](illustrative_examples.jpeg)
+![](pics/illustrative_examples.jpeg)
 
 In all the following discussions, we will use the ADMG in example (a)
 above as a running example. The packages comes with simulated datasets
@@ -224,10 +224,10 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
 
 # 4 Details on Estimation via Onestep Estimator and TMLE
 
-<img src="nuisances.jpeg" style="width:100.0%" /> The package constructs
-the EIF based **Onestep estimator** and **TMLE** for ACE through break
-down the EIF into several nuisance parameters, which falls into two
-categories: the <span style="color:deeppink">sequential
+<img src="pics/nuisances.jpeg" style="width:100.0%" /> The package
+constructs the EIF based **Onestep estimator** and **TMLE** for ACE
+through break down the EIF into several nuisance parameters, which falls
+into two categories: the <span style="color:deeppink">sequential
 regressions</span> and <span style="color:deeppink">density
 ratios</span>. The figure above illustrates the decomposition of the EIF
 into the nuisance parameters using the ADMG in example (a) above.

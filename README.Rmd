@@ -13,7 +13,7 @@ always_allow_html: true
 
 The `flexCausal` R package enables estimation of Average Causal Effects (ACE) for a broad class of graphical models that satisfy the treatment primal fixability criterion. Briefly, the package accepts a dataset and a causal graph—defined through nodes, directed edges, and bi-directed edges—as input and provides causal effect estimates using robust influence-function-based estimators developed in [this paper](http://www.arxiv.org/pdf/2409.03962).
 
-![](background.png){width=100%}
+![](pics/background.png){width=100%}
 
 
 
@@ -39,7 +39,7 @@ The `flexCausal` R package enables estimation of Average Causal Effects (ACE) fo
 Here's a schematic view of what `flexCausal` is capable of and how it works:
 
 
-![](pkg.jpg)
+![](pics/pkg.png)
 
 
 
@@ -70,7 +70,7 @@ The ADMG is one of the major input to the `flexCausal` package. It is a projecti
 2. $V_i \ \red{\leftrightarrow} \ V_j$ is included in the ADMG $G(O)$ if a collider-free path, like $V_i \ \blue{\leftarrow} \cdots \blue{\rightarrow} \ V_j$, exists in $G(O \cup U)$ where all the intermediate variables belong to $U$.
 
 See Examples (a) and (b), where the DAGs with unmeasured variables on the left are projected onto their corresponding ADMGs on the right:
-![](illustrative_examples.jpeg)
+![](pics/illustrative_examples.jpeg)
 
 In all the following discussions, we will use the ADMG in example (a) above as a running example. The packages comes with simulated datasets `data_example_a` and `data_example_b` that are generated from the ADMGs in examples (a) and (b), respectively. Let’s take a look at the first few rows of `data_example_a`:
 
@@ -142,7 +142,7 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
 
 # Details on Estimation via Onestep Estimator and TMLE
 
-![](nuisances.jpeg){width=100%}
+![](pics/nuisances.jpeg){width=100%}
 The package constructs the EIF based **Onestep estimator** and **TMLE** for ACE through break down the EIF into several nuisance parameters, which falls into two categories: the <span style="color:deeppink">sequential regressions</span> and <span style="color:deeppink">density ratios</span>. The figure above illustrates the decomposition of the EIF into the nuisance parameters using the ADMG in example (a) above.  
 
 To define these nuisance parameters, it is essential to learn the properties of the ADMG. Specifically, we require three definitions:  
