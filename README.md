@@ -31,7 +31,7 @@ paper](http://www.arxiv.org/pdf/2409.03962).
 >
 > - Treatment and outcome specifications
 >
-> - ADMG (acyclic directed mixed graph), a projection of directed
+> - ADMG (acyclic directed mixed graph), projection of a directed
 >   acyclic graphs (DAG) with latent variables. This can be based on
 >   expert knowledge, causal discovery methods, or a combination of
 >   both.
@@ -55,8 +55,23 @@ works:
 
 ![](pics/pkg.png)
 
-If you find this package useful, please cite: [this
-paper](http://www.arxiv.org/pdf/2409.03962)
+If you find this package useful, please consider cite:
+<a href="http://www.arxiv.org/pdf/2409.03962" target="_blank">this
+paper</a>
+
+``` r
+@article{guo2024average,
+  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
+  author={Guo, Anna and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2409.03962},
+  year={2024}
+}
+```
+
+<a href="https://arxiv.org/pdf/2312.10234" target="_blank">This
+paper</a> is highly relevant as well, which offers estimation strategy
+for ACE under the front-door model, a special case of the graphical
+models considered in `flexCausal`.
 
 ``` r
 @article{guo2024average,
