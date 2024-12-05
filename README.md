@@ -32,7 +32,7 @@ paper](http://www.arxiv.org/pdf/2409.03962).
 > - Treatment and outcome specifications
 >
 > - ADMG (acyclic directed mixed graph), projection of a directed
->   acyclic graphs (DAG) with latent variables. This can be based on
+>   acyclic graph (DAG) with latent variables. This can be based on
 >   expert knowledge, causal discovery methods, or a combination of
 >   both.
 
