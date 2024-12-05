@@ -74,11 +74,11 @@ for ACE under the front-door model, a special case of the graphical
 models considered in `flexCausal`.
 
 ``` r
-@article{guo2024average,
-  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
-  author={Guo, Anna and Nabi, Razieh},
-  journal={arXiv preprint arXiv:2409.03962},
-  year={2024}
+@article{guo2023targeted,
+  title={Targeted Machine Learning for Average Causal Effect Estimation Using the Front-Door Functional},
+  author={Guo, Anna and Benkeser, David and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2312.10234},
+  year={2023}
 }
 ```
 
