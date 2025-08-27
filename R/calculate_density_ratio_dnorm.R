@@ -42,9 +42,9 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data, formula
 
 
   # prediction data
-  data.a0 <- data[, mp] %>% mutate(!!treatment := a0)
+  data.a0 <- data[, mp, drop=F] %>% mutate(!!treatment := a0)
 
-  data.a1 <- data[, mp] %>% mutate(!!treatment := (1-a0))
+  data.a1 <- data[, mp, drop=F] %>% mutate(!!treatment := (1-a0))
 
   # for which variables, user specified formula for regression
   if (!is.null(formula)){
