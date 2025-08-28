@@ -133,6 +133,11 @@ backdoor.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_ed
     mu.Y_a1 <- predict(or_fit, newdata=dat_Y.a1)
     mu.Y_a0 <- predict(or_fit, newdata=dat_Y.a0)
 
+    if(all(Y %in% c(0,1))){
+      mu.Y_a1 <- plogis(mu.Y_a1)
+      mu.Y_a0 <- plogis(mu.Y_a0)
+    }
+
 
   }
 
@@ -235,7 +240,44 @@ backdoor.TMLE.a <- function(a=NULL,data=NULL,vertices=NULL, di_edges=NULL, bi_ed
                 p.a.mpA = p.a0.mpA # estimated E[A=a1|mp(A)]
   )
 
-  return(list(aipw=aipw, gcomp=gcomp, ipw=ipw))
+  ## TMLE
+  if(all(Y %in% c(0,1))){
+
+    or_model <- glm(Y ~ offset(qlogis(mu.Y_a0))+((A==a0)*1/p.a0.mpA)-1, family=binomial(), start=0)
+
+    eps.Y = coef(or_model)
+
+    mu.Y_a0 <- plogis(qlogis(mu.Y_a0)+eps.Y*(A==a0)*1/p.a0.mpA)
+
+  }else{
+
+    or_model <- glm(Y ~ offset(mu.Y_a0)+1,weights = (A==a0)*1/p.a0.mpA)
+    coef_Y <- coef(or_model)
+
+    mu.Y_a0 <- mu.Y_a0+coef_Y
+
+  }
+
+  tmle.est <- mean((A==a0)*(Y-mu.Y_a0)/p.a0.mpA+mu.Y_a0)
+
+  ## EIF
+  EIF <- (A==a0)*(Y-mu.Y_a0)/p.a0.mpA+mu.Y_a0 - tmle.est
+
+
+  # confidence interval
+  lower.ci <- tmle.est-1.96*sqrt(mean(EIF^2)/nrow(data))
+  upper.ci <- tmle.est+1.96*sqrt(mean(EIF^2)/nrow(data))
+
+  tmle.out <- list(estimated_psi=tmle.est, # estimated parameter
+               lower.ci=lower.ci, # lower bound of 95% CI
+               upper.ci=upper.ci, # upper bound of 95% CI
+               EIF=EIF, # E(Dstar) for Y|M,A,X and M|A,X, and A|X
+               p.a.mpA = p.a0.mpA, # estimated E[A=a1|mp(A)]
+               mu.Y_a = mu.Y_a0 # estimated E[Y|A=a0,mp(A)]
+  )
+
+
+  return(list(TMLE=tmle.out, Onestep=aipw, gcomp=gcomp, ipw=ipw))
 
 
 
