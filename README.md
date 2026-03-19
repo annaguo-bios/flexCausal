@@ -41,7 +41,7 @@ models considered in `flexCausal`.
 
 ``` r
 @article{guo2023targeted,
-  title={Targeted Machine Learning for Average Causal Effect Estimation Using the Front-Door Functional},
+  title={Flexible Nonparametric Inference for Causal Effects under the Front-Door Model},
   author={Guo, Anna and Benkeser, David and Nabi, Razieh},
   journal={arXiv preprint arXiv:2312.10234},
   year={2023}
