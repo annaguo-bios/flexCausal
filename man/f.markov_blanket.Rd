@@ -17,7 +17,7 @@ A vector of vertices that is in the Markov blanket of the given vertex.
 \description{
 Function to get the Markov blanket of a vertex in a graph object.
 Markov blanket of a vertex Vi is the union of vertices that is in the district of Vi and their parents set.
-Mb= union(district(Vi), parents(district(Vi))). THIS IS PSUEDO CODE.
+Mb= union(district(Vi), parents(district(Vi))).
 }
 \examples{
 graph <- make.graph(vertices=c('A','M','L','Y','X'),

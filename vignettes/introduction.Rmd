@@ -14,7 +14,29 @@ header-includes:
 
 The `flexCausal` R package enables estimation of Average Causal Effects (ACE) for a broad class of graphical models that satisfy the treatment primal fixability criterion. Briefly, the package accepts a dataset and a causal graph—defined through nodes, directed edges, and bi-directed edges—as input and provides causal effect estimates using robust influence-function-based estimators developed in [this paper](http://www.arxiv.org/pdf/2409.03962).
 
-![](../pics/background.png){width=100%}
+
+If you find this package useful, please consider cite: [this paper](http://www.arxiv.org/pdf/2409.03962){target="_blank"}
+```{r, eval=FALSE, citation}
+@article{guo2024average,
+  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
+  author={Guo, Anna and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2409.03962},
+  year={2024}
+}
+```
+
+[This paper](https://arxiv.org/pdf/2312.10234){target="_blank"} is highly relevant as well, which offers estimation strategy for ACE under the front-door model, a special case of the graphical models considered in `flexCausal`.
+
+```{r, eval=FALSE, citation_frontdoor}
+@article{guo2023targeted,
+  title={Targeted Machine Learning for Average Causal Effect Estimation Using the Front-Door Functional},
+  author={Guo, Anna and Benkeser, David and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2312.10234},
+  year={2023}
+}
+```
+
+![](pics/background.png){width=100%}
 
 
 
@@ -42,18 +64,6 @@ Here's a schematic view of what `flexCausal` is capable of and how it works:
 
 ![](../pics/pkg.png){width=80%}
 
-
-
-If you find this package useful, please cite: [this paper](http://www.arxiv.org/pdf/2409.03962)
-```{r, eval=FALSE, citation}
-@article{guo2024average,
-  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
-  author={Guo, Anna and Nabi, Razieh},
-  journal={arXiv preprint arXiv:2409.03962},
-  year={2024}
-}
-```
-
 # Installation
 To install, run the following code in terminal:
 
@@ -78,7 +88,7 @@ In all the following discussions, we will use the ADMG in example (a) above as a
 ```{r, load-pkg, warning=F, message=F}
 
 library(flexCausal) # load the package
-
+data(data_example_a) # load the simulated dataset for example (a)
 head(data_example_a) # take a glance of the data, which is a simulated dataset under above figure (a).
 
 ```
@@ -110,17 +120,17 @@ f.adj_matrix(graph_a) # get the adjacency matrix of the ADMG in example (a)
 
 # Quick Start on Estimation
 
-The main function in this package is `ADMGtmle()`, which estimates the Average Causal Effect (ACE) using both a one-step corrected plug-in estimator and a TMLE estimator. To get a sense of how to use this package, we provide a quick example below. We will use the ADMG in example (a) above to estimate the ACE of treatment $A$ on outcome $Y$ using a simulated dataset `data_example_a`. We can directly use the `graph_a` object created above as the input to the function.
+The main function in this package is `estADMG()`, which estimates the Average Causal Effect (ACE) using both a one-step corrected plug-in estimator and a TMLE estimator. To get a sense of how to use this package, we provide a quick example below. We will use the ADMG in example (a) above to estimate the ACE of treatment $A$ on outcome $Y$ using a simulated dataset `data_example_a`. We can directly use the `graph_a` object created above as the input to the function.
 
 ```{r, quick-start, warning=F, message=T}
 
-est <- ADMGtmle(a=c(1,0),
+est <- estADMG(a=c(1,0),
                 data=data_example_a, 
                 graph=graph_a,
                 treatment='A', outcome='Y')
 ```
 
-The code above estimates the ACE of treatment $A$ on outcome $Y$, defined as $E(Y^1)-E(Y^0)$, using the data `data_example_a` generated based on Figure (a). The function `ADMGtmle()` takes the following arguments:
+The code above estimates the ACE of treatment $A$ on outcome $Y$, defined as $E(Y^1)-E(Y^0)$, using the data `data_example_a` generated based on Figure (a). The function `estADMG()` takes the following arguments:
   
 - `a`: a vector of length 2, specifying the values of treatment $A$ to compare. For example, `a=c(1,0)` compares causal effect under $A=1$ verse $A=0$. Alternatively, `a` can be input as a single integer if estimating the causal effect under only one treatment level is the goal. For example, to estimate $E(Y^1)$, specify `a = 1`.
 - `data`: a data frame containing the data.
@@ -129,11 +139,11 @@ The code above estimates the ACE of treatment $A$ on outcome $Y$, defined as $E(
 - `outcome`: a string, specifying the name of the outcome variable.
 
 
-Alternatively, instead of providing a graph object, users can directly specify the vertices, directed edges, and bi-directed edges within the ADMGtmle() function, as shown below:
+Alternatively, instead of providing a graph object, users can directly specify the vertices, directed edges, and bi-directed edges within the estADMG() function, as shown below:
 
 ```{r, quick-start-option2, warning=F, message=T}
 
-est <- ADMGtmle(a=c(1,0),data=data_example_a, 
+est <- estADMG(a=c(1,0),data=data_example_a, 
                 vertices=c('A','M','L','Y','X'), # specify the vertices
                 bi_edges=list(c('A','Y')), # specify the bi-directed edges
                 di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')), # specify the directed edges
@@ -154,9 +164,10 @@ The code below is an example of adopting SuperLearner with cross-fitting:
 
 ```{r, onestep-eg, warning=F, message=F, eval=F}
 
-est <- ADMGtmle(a=c(1,0),
+est <- estADMG(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
+               treatment='A', outcome='Y',
                 lib.seq = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.Y = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.A = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
@@ -175,18 +186,18 @@ The code below is an example of using the `dnorm` method for the density ratio e
 
 ```{r, tmle-eg, warning=F, message=F, eval=F}
 
-est <- ADMGtmle(a=c(1,0),
+est <- estADMG(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
                 ratio.method.M = "dnorm")
 ```
 
 # Output
-As an example, we `ADMGtmle()` to estimate the average counterfactual outcome $E(Y^1)$. The output is described as follows
+As an example, we `estADMG()` to estimate the average counterfactual outcome $E(Y^1)$. The output is described as follows
 
 ```{r, output, eval=F}
 
-est <- ADMGtmle(a=1,
+est <- estADMG(a=1,
                 data=data_example_a, 
                 graph = graph_a,
                 treatment='A', outcome='Y')
@@ -196,23 +207,23 @@ est$TMLE # a list contains the estimation result from TMLE estimator
 est$Onestep # a list contains the estimation result from Onestep estimator
 
 # For either the TMLE or Onestep estimator, the output is a list that contains the following elements:
-est$TMLE$estimated_psi # the estimated average counterfactual outcome
+est$TMLE$EYa # the estimated average counterfactual outcome
 est$TMLE$lower.ci # the lower bound of the 95% confidence interval
 est$TMLE$upper.ci # the upper bound of the 95% confidence interval
 est$TMLE$EIF # the estimated efficient influence function
-est$TMLE$EIF.Y # the estimated efficient influence function at the tangent space associated with the outcome
-est$TMLE$EIF.A # the estimated efficient influence function at the tangent space associated with the treatment
-est$TMLE$EIF.v # the estimated efficient influence function at the tangent space associated with the rest of the variables
-est$TMLE$p.a1.mpA # the estimated propensity score for treatment
-est$TMLE$mu.next.A # the estimated sequential regression associated with variable that comes right after the treatment according to the topological ordering of the ADMG
-est$TMLE$EDstar # mean of the estimated efficient influence function
-est$TMLE$iter # iterations take for TMLE estimator to converge
-est$TMLE$EDstar.record # the mean of the estimated efficient influence function at each iteration
+est$TMLE.Ya$EIF.Y # the estimated efficient influence function at the tangent space associated with the outcome
+est$TMLE.Ya$EIF.A # the estimated efficient influence function at the tangent space associated with the treatment
+est$TMLE.Ya$EIF.v # the estimated efficient influence function at the tangent space associated with the rest of the variables
+est$TMLE.Ya$p.a1.mpA # the estimated propensity score for treatment
+est$TMLE.Ya$mu.next.A # the estimated sequential regression associated with variable that comes right after the treatment according to the topological ordering of the ADMG
+est$TMLE.Ya$EDstar # mean of the estimated efficient influence function
+est$TMLE.Ya$iter # iterations take for TMLE estimator to converge
+est$TMLE.Ya$EDstar.record # the mean of the estimated efficient influence function at each iteration
 
 ```
 
 # Functions for learning the properties of ADMG
-Apart from the `ADMGtmle()` for causal effec estimation, we also provide functions for learning the properties of ADMG. The functions are described as follows:
+Apart from the `estADMG()` for causal effec estimation, we also provide functions for learning the properties of ADMG. The functions are described as follows:
   
 - `make.graph`: create the graph object. For example, to create the graph object for the ADMG in Figure (a), we can use the following code:
 
@@ -264,13 +275,6 @@ f.district(graph_a, 'A')
 
 ```
 
-- `cnt.districts`: return the number of districts in the graph.
-
-```{r, cnt-districts, warning=F, message=F, eval=F}
-cnt.districts(graph_a)
-
-```
-
 - `f.markov_blanket`: return the Markov blanket of a given vertex or vertices in the graph. For example, to get the Markov blanket of vertex `A` in the graph object for the ADMG in Figure (a), we can use the following code:
 
 ```{r, f-markov-blanket, warning=F, message=F, eval=F}
@@ -283,6 +287,12 @@ f.markov_blanket(graph_a, 'A')
 ```{r, f-markov-pillow, warning=F, message=F, eval=F}
 f.markov_pillow(graph_a, 'A')
 
+```
+
+- `is.fix`: return whether a treatment variable is fixable in a graph object. For example, to check whether the treatment variable `A` is fixable in the graph object for the ADMG in Figure (a), we can use the following code:
+
+```{r, is-fix, warning=F, message=F, eval=F}
+is.fix(graph_a, 'A')
 ```
 
 - `is.p.fix`: return whether a treatment variable is primal fixable in a graph object. For example, to check whether the treatment variable `A` is primal fixable in the graph object for the ADMG in Figure (a), we can use the following code:

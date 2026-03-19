@@ -1,31 +1,48 @@
-#' @title Calculate the density ratio of M given its Markov pillow at treatment level a0 verse a1.
-#' @description This function calculates the density ratio of two conditional densities. Let \eqn{mp(M)-A} denote the Markov pillow of M excluding A. The density ratio is calculated as \eqn{p(M|mp(M)-A, A=a0)/p(M|mp(M)-A, A=a1)}.
-#' If M is univariate or multivariate continuous variable, it assume \eqn{p(M|mp(M)} is normally distributed. If M is a binary variable, it assume \eqn{p(M|mp(M)} is Bernoulli distributed.
-#' @param a0 A numeric value indicating the treatment level. The density ratio is calculated at this level verse level 1-a0.
-#' @param M A character string indicating the name of the variable, for which the density ratio is calculated.
-#' @param graph A graph object created by \code{\link{make.graph}}.
-#' @param treatment A character string indicating the name of the treatment variable A.
-#' @param data A data frame containing the data.
-#' @param formula A regression formula specifying the relationship between M or L and its Markov pillow. See the description for `ADMGtmle()` for more details.
-#' @keywords graph density ratio
-#' @return A vector of density ratios for each row of the data.
-#' @export
-#' @importFrom mvtnorm dmvnorm
-#' @examples
-#' graph <- make.graph(vertices=c('A','M','L','Y','X'),
-#' bi_edges=list(c('A','Y')),
-#' di_edges=list(c('X','A'), c('X','M'), c('X','L'),
-#' c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')),
-#' multivariate.variables = list(M=c('M.1','M.2')))
-#' ratio <- calculate_density_ratio_dnorm(a0=0, "M", graph, treatment="A", data=data_example_a)
-#' head(ratio)
+#' Calculate the density ratio of M given its Markov pillow at two treatment levels.
 #'
+#' Computes the ratio of two conditional densities of M evaluated at treatment
+#' levels \eqn{a_0} and \eqn{1 - a_0}. Let \eqn{mp(M) \setminus A} denote the
+#' Markov pillow of M excluding the treatment A. The density ratio is defined as
+#' \deqn{\frac{p(M \mid mp(M) \setminus A,\, A = a_0)}{p(M \mid mp(M) \setminus A,\, A = 1 - a_0)}.}
+#' The conditional density of M is modelled as follows: Gaussian for univariate
+#' or multivariate continuous M (via linear regression), Bernoulli for binary M
+#' (via logistic regression), and multivariate Gaussian for multivariate
+#' continuous M (via separate linear regressions with a shared residual
+#' covariance). Multivariate variables with binary elements are not supported.
+#'
+#' @param a0 Numeric. The reference treatment level; must be 0 or 1. The
+#'   density ratio is computed as \eqn{p(M \mid A = a_0) / p(M \mid A = 1 - a_0)}.
+#' @param M A character string naming the variable for which the density ratio
+#'   is computed. May refer to a univariate or multivariate vertex as defined in
+#'   \code{graph}.
+#' @param graph A graph object created by \code{\link{make.graph}}.
+#' @param treatment A character string naming the binary treatment variable A in
+#'   \code{data}.
+#' @param data A data frame containing all variables in the graph.
+#' @param formula An optional named list of regression formulas, where each name
+#'   is a variable name and the corresponding value is the formula to use for
+#'   that variable's regression on its Markov pillow. Variables not included in
+#'   this list are regressed using all Markov pillow variables as predictors.
+#'   See \code{\link{estADMG}} for details.
+#'
+#' @return A numeric vector of length \code{nrow(data)} containing the
+#'   density ratio for each observation. Returns a vector of ones if the
+#'   treatment A is not in the Markov pillow of M (i.e., the ratio is
+#'   identically 1).
+#'
+#' @note Currently only supports binary treatment coded as 0/1. Multivariate
+#'   variables with binary elements are not supported.
+#'
+#' @keywords internal
+#' @importFrom mvtnorm dmvnorm
 calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data, formula=NULL){ # A is a vector, M and X are data frame
 
   # This function only allow M to be either univariate binary / continuous
   # or multivariate continuous.
   # It does not allow M to be a multivariate variable and has binary elements.
 
+
+  if (!(a0 %in% c(0, 1))) stop("`a0` must be 0 or 1 for binary treatment.")
 
   # extract elements from graph
   multivariate.variables <- graph$multivariate.variables
@@ -37,7 +54,7 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data, formula
 
   # if treatment is not in the Markov pillow of M, return 1
   if (!(treatment %in% mp)){
-    return(1)
+    return(rep(1, nrow(data)))
   }
 
 
@@ -129,9 +146,9 @@ calculate_density_ratio_dnorm <- function(a0, M, graph, treatment, data, formula
       # For binary columns, use glm
 
       if (M %in% formula.variables){ # if the user specified formula for this variable
-        model <- glm(formula[[M]], data=data[, c(mp,M)])
+        model <- glm(formula[[M]], data=data[, c(mp,M)], family = binomial())
       }else{
-        model <- glm(data[, M] ~ . , data=data[, mp])
+        model <- glm(data[, M] ~ . , data=data[, mp], family = binomial())
       }
 
       # calculate the density ratio

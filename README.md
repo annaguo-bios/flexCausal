@@ -1,19 +1,17 @@
-An R Package for Causal Effect Estimation in Graphical Models with
-Unmeasured Variables
+Causal Effect Estimation in Graphical Models with Unmeasured Variables
 ================
 
-- [1 Installation](#1-installation)
-- [2 A Brief Introduction to ADMGs](#2-a-brief-introduction-to-admgs)
-- [3 Quick Start on Estimation](#3-quick-start-on-estimation)
-- [4 Details on Estimation via Onestep Estimator and
-  TMLE](#4-details-on-estimation-via-onestep-estimator-and-tmle)
-  - [4.1 Sequential Regressions](#41-sequential-regressions)
-  - [4.2 Density Ratios](#42-density-ratios)
-  - [4.3 The Onestep estimator](#43-the-onestep-estimator)
-  - [4.4 The TMLE](#44-the-tmle)
-- [5 Output](#5-output)
-- [6 Functions for learning the properties of
-  ADMG](#6-functions-for-learning-the-properties-of-admg)
+- [1 A Brief Introduction to ADMGs](#1-a-brief-introduction-to-admgs)
+- [2 Quick Start on Estimation](#2-quick-start-on-estimation)
+- [3 Details on Estimation via Onestep Estimator and
+  TMLE](#3-details-on-estimation-via-onestep-estimator-and-tmle)
+  - [3.1 Sequential Regressions](#31-sequential-regressions)
+  - [3.2 Density Ratios](#32-density-ratios)
+  - [3.3 The Onestep estimator](#33-the-onestep-estimator)
+  - [3.4 The TMLE](#34-the-tmle)
+- [4 Output](#4-output)
+- [5 Functions for learning the properties of
+  ADMG](#5-functions-for-learning-the-properties-of-admg)
 
 The `flexCausal` R package enables estimation of Average Causal Effects
 (ACE) for a broad class of graphical models that satisfy the treatment
@@ -23,7 +21,34 @@ edges—as input and provides causal effect estimates using robust
 influence-function-based estimators developed in [this
 paper](http://www.arxiv.org/pdf/2409.03962).
 
-<img src="pics/background.png" style="width:100.0%" />
+If you find this package useful, please consider cite:
+<a href="http://www.arxiv.org/pdf/2409.03962" target="_blank">this
+paper</a>
+
+``` r
+@article{guo2024average,
+  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
+  author={Guo, Anna and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2409.03962},
+  year={2024}
+}
+```
+
+<a href="https://arxiv.org/pdf/2312.10234" target="_blank">This
+paper</a> is highly relevant as well, which offers estimation strategy
+for ACE under the front-door model, a special case of the graphical
+models considered in `flexCausal`.
+
+``` r
+@article{guo2023targeted,
+  title={Targeted Machine Learning for Average Causal Effect Estimation Using the Front-Door Functional},
+  author={Guo, Anna and Benkeser, David and Nabi, Razieh},
+  journal={arXiv preprint arXiv:2312.10234},
+  year={2023}
+}
+```
+
+<img src="vignettes/pics/background.png" style="width:100.0%" />
 
 > The package asks for the following **inputs** from the user:
 >
@@ -53,38 +78,8 @@ paper](http://www.arxiv.org/pdf/2409.03962).
 Here’s a schematic view of what `flexCausal` is capable of and how it
 works:
 
-![](pics/pkg.png)
-
-If you find this package useful, please consider cite:
-<a href="http://www.arxiv.org/pdf/2409.03962" target="_blank">this
-paper</a>
-
-``` r
-@article{guo2024average,
-  title={Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria},
-  author={Guo, Anna and Nabi, Razieh},
-  journal={arXiv preprint arXiv:2409.03962},
-  year={2024}
-}
-```
-
-<a href="https://arxiv.org/pdf/2312.10234" target="_blank">This
-paper</a> is highly relevant as well, which offers estimation strategy
-for ACE under the front-door model, a special case of the graphical
-models considered in `flexCausal`.
-
-``` r
-@article{guo2023targeted,
-  title={Targeted Machine Learning for Average Causal Effect Estimation Using the Front-Door Functional},
-  author={Guo, Anna and Benkeser, David and Nabi, Razieh},
-  journal={arXiv preprint arXiv:2312.10234},
-  year={2023}
-}
-```
-
-# 1 Installation
-
-To install, run the following code in terminal:
+![](pics/pkg.png) \# Installation To install, run the following code in
+terminal:
 
 ``` bash
 # install the devtools package first if it's not yet installed
@@ -94,7 +89,7 @@ devtools::install_github("annaguo-bios/flexCausal")
 The source code for `flexCausal` package is available on GitHub at
 [flexCausal](https://github.com/annaguo-bios/flexCausal/tree/main).
 
-# 2 A Brief Introduction to ADMGs
+# 1 A Brief Introduction to ADMGs
 
 The ADMG is one of the major input to the `flexCausal` package. It is a
 projection of a Directed Acyclic Graph (DAG) with unmeasured variables
@@ -125,7 +120,7 @@ few rows of `data_example_a`:
 
 ``` r
 library(flexCausal) # load the package
-
+data(data_example_a)
 head(data_example_a) # take a glance of the data, which is a simulated dataset under above figure (a).
 ```
 
@@ -160,7 +155,7 @@ properties of the ADMG using functions provided in the package. These
 functions include topological ordering, genealogical relations, and
 causal effect identifiability, and etc. For a detailed discussion, see
 [Functions for learning the properties of
-ADMG](#6-functions-for-learning-the-properties-of-admg).
+ADMG](#5-functions-for-learning-the-properties-of-admg).
 
 As a quick example, we can obtain the adjacency matrix of this ADMG with
 the `f.adj_matrix()` function:
@@ -176,9 +171,9 @@ f.adj_matrix(graph_a) # get the adjacency matrix of the ADMG in example (a)
     ## Y 0 1 1 0 1
     ## X 0 0 0 0 0
 
-# 3 Quick Start on Estimation
+# 2 Quick Start on Estimation
 
-The main function in this package is `ADMGtmle()`, which estimates the
+The main function in this package is `estADMG()`, which estimates the
 Average Causal Effect (ACE) using both a one-step corrected plug-in
 estimator and a TMLE estimator. To get a sense of how to use this
 package, we provide a quick example below. We will use the ADMG in
@@ -187,23 +182,22 @@ using a simulated dataset `data_example_a`. We can directly use the
 `graph_a` object created above as the input to the function.
 
 ``` r
-est <- ADMGtmle(a=c(1,0),
+est <- estADMG(a=c(1,0),
                 data=data_example_a, 
                 graph=graph_a,
                 treatment='A', outcome='Y')
 ```
 
-    ## The treatment is not fixable but is primal fixable. Estimation provided via extended front-door adjustment.
+    ## The treatment is not fixable but is primal fixable. Estimation provided via extended front-door functional.
 
-    ## TMLE estimated ACE: 1.96; 95% CI: (1.33, 2.58) 
-    ## Onestep estimated ACE: 1.96; 95% CI: (1.34, 2.59)
+    ## Onestep estimated ACE: 1.96; 95% CI: (1.3, 2.62) 
+    ## TMLE estimated ACE: 1.96; 95% CI: (1.29, 2.62)
 
-    ## 
-    ##  The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
+    ## The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
 
 The code above estimates the ACE of treatment $A$ on outcome $Y$,
 defined as $E(Y^1)-E(Y^0)$, using the data `data_example_a` generated
-based on Figure (a). The function `ADMGtmle()` takes the following
+based on Figure (a). The function `estADMG()` takes the following
 arguments:
 
 - `a`: a vector of length 2, specifying the values of treatment $A$ to
@@ -218,10 +212,10 @@ arguments:
 
 Alternatively, instead of providing a graph object, users can directly
 specify the vertices, directed edges, and bi-directed edges within the
-ADMGtmle() function, as shown below:
+estADMG() function, as shown below:
 
 ``` r
-est <- ADMGtmle(a=c(1,0),data=data_example_a, 
+est <- estADMG(a=c(1,0),data=data_example_a, 
                 vertices=c('A','M','L','Y','X'), # specify the vertices
                 bi_edges=list(c('A','Y')), # specify the bi-directed edges
                 di_edges=list(c('X','A'), c('X','M'), c('X','L'),c('X','Y'), c('M','Y'), c('A','M'), c('A','L'), c('M','L'), c('L','Y')), # specify the directed edges
@@ -229,15 +223,14 @@ est <- ADMGtmle(a=c(1,0),data=data_example_a,
                 treatment='A', outcome='Y')
 ```
 
-    ## The treatment is not fixable but is primal fixable. Estimation provided via extended front-door adjustment.
+    ## The treatment is not fixable but is primal fixable. Estimation provided via extended front-door functional.
 
-    ## TMLE estimated ACE: 1.96; 95% CI: (1.33, 2.58) 
-    ## Onestep estimated ACE: 1.96; 95% CI: (1.34, 2.59)
+    ## Onestep estimated ACE: 1.96; 95% CI: (1.3, 2.62) 
+    ## TMLE estimated ACE: 1.96; 95% CI: (1.29, 2.62)
 
-    ## 
-    ##  The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
+    ## The graph is nonparametrically saturated. Results from the one-step estimator and TMLE are provided, which are in theory the most efficient estimators.
 
-# 4 Details on Estimation via Onestep Estimator and TMLE
+# 3 Details on Estimation via Onestep Estimator and TMLE
 
 <img src="pics/nuisances.jpeg" style="width:100.0%" /> The package
 constructs the EIF based **Onestep estimator** and **TMLE** for ACE
@@ -252,7 +245,7 @@ properties of the ADMG. Specifically, we require three definitions:
 1. A topological ordering $\tau$ for variables in the ADMG. With a graph
 oject, $\tau$ can be obtained using the `f.top_order()` function. See
 [Functions for learning the properties of
-ADMG](#6-functions-for-learning-the-properties-of-admg) for more
+ADMG](#5-functions-for-learning-the-properties-of-admg) for more
 details.
 
 ``` r
@@ -280,7 +273,7 @@ defined as the ratio of conditional density of a variable. Evaluation of
 $A$ at these density ratios also depends on which set the corresponding
 variable belongs to.
 
-## 4.1 Sequential Regressions
+## 3.1 Sequential Regressions
 
 For the sequential regressions, we offer three options for estimation:
 (1) via linear or logistic regression, (2) via , and (3) via together
@@ -312,246 +305,313 @@ Here we offer a table summary of available methods for sequential
 regressions.
 
 <table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+
 <caption>
 
 Sequential Regressions Estimation Method Details
-
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;font-weight: bold;">
 
 Estimation Method
-
 </th>
+
 <th style="text-align:left;font-weight: bold;">
 
 Arguments
-
 </th>
+
 <th style="text-align:left;font-weight: bold;">
 
 Explanations
-
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr grouplength="4">
+
 <td colspan="3" style="border-bottom: 1px solid;">
 
 <strong>Linear or logistic regressions</strong>
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `formulaY`
-
 </td>
+
 <td style="text-align:left;">
 
 Formula for outcome regression
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `formulaA`
-
 </td>
+
 <td style="text-align:left;">
 
 Formula for treatment regression
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `linkY_binary`
-
 </td>
+
 <td style="text-align:left;">
 
 Link function for binary outcome Y in logistic regression
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `linkA`
-
 </td>
+
 <td style="text-align:left;">
 
 Link function for binary outcome A in logistic regression
-
 </td>
+
 </tr>
+
 <tr grouplength="6">
+
 <td colspan="3" style="border-bottom: 1px solid;">
 
 <strong>SuperLearner</strong>
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `superlearner.seq`
-
 </td>
+
 <td style="text-align:left;">
 
 Whether to use SuperLearner for variables between $A$ and $Y$
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `superlearner.Y`
-
 </td>
+
 <td style="text-align:left;">
 
 Whether to use SuperLearner for outcome Y
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `superlearner.A`
-
 </td>
+
 <td style="text-align:left;">
 
 Whether to use SuperLearner for outcome A
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `library.seq`
-
 </td>
+
 <td style="text-align:left;">
 
 Library of learners for variables between $A$ and $Y$
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `library.Y`
-
 </td>
+
 <td style="text-align:left;">
 
 Library of learners for $Y$
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `library.A`
-
 </td>
+
 <td style="text-align:left;">
 
 Library of learners for $A$
-
 </td>
+
 </tr>
+
 <tr grouplength="3">
+
 <td colspan="3" style="border-bottom: 1px solid;">
 
 <strong>SuperLearner with cross-fitting</strong>
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `crossfit`
-
 </td>
+
 <td style="text-align:left;">
 
 Whether to use cross-fitting along with SuperLearner
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `K`
-
 </td>
+
 <td style="text-align:left;">
 
 Number of folds in cross-fitting
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 </td>
-</tr>
-<tr>
-<td style="text-align:left;padding-left: 2em;" indentlevel="1">
-</td>
+
 <td style="text-align:left;">
 
 `library.xxx`
-
 </td>
+
 <td style="text-align:left;">
 
 Library of SuperLearner is still specified via `library.seq`,
 `library.Y`, `library.A`, respectively
-
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 The code below is an example of adopting SuperLearner with
 cross-fitting:
 
 ``` r
-est <- ADMGtmle(a=c(1,0),
+library(SuperLearner)
+
+est <- estADMG(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
-                treatment='A', outcome='Y'
+                treatment='A', outcome='Y',
                 lib.seq = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.Y = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
                 lib.A = c("SL.glm", "SL.earth", "SL.ranger", "SL.mean"),
@@ -559,7 +619,7 @@ est <- ADMGtmle(a=c(1,0),
                 K=5)
 ```
 
-## 4.2 Density Ratios
+## 3.2 Density Ratios
 
 For the density ratios, we provide three options for estimation: (1) via
 direct estimation using the `densratio` package, (2) via Bayes’ rule,
@@ -600,184 +660,217 @@ the arguments discussed for sequential regressions.
 Here we offer a table summary of available methods for density ratios.
 
 <table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+
 <caption>
 
 Density Ratios Estimation Method Details
-
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;font-weight: bold;">
 
 Estimation Method
-
 </th>
+
 <th style="text-align:left;font-weight: bold;">
 
 Arguments
-
 </th>
+
 <th style="text-align:left;font-weight: bold;">
 
 Explanations
-
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr grouplength="2">
+
 <td colspan="3" style="border-bottom: 1px solid;">
 
 <strong>`densratio` package</strong>
-
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 `ratio.method.L="densratio"`
+</td>
+
+<td style="text-align:left;">
 
 </td>
-<td style="text-align:left;">
-</td>
+
 <td style="text-align:left;">
 
 Use `densratio` package to estimate the density ratio for variables in
 $\mathcal{L}$
-
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 `ratio.method.M="densratio"`
+</td>
+
+<td style="text-align:left;">
 
 </td>
-<td style="text-align:left;">
-</td>
+
 <td style="text-align:left;">
 
 Use `densratio` package to estimate the density ratio for variables in
 $\mathcal{M}$
-
 </td>
+
 </tr>
+
 <tr grouplength="2">
+
 <td colspan="3" style="border-bottom: 1px solid;">
 
 <strong>Bayes’ rule</strong>
-
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 `ratio.method.L="bayes"`
+</td>
+
+<td style="text-align:left;">
 
 </td>
-<td style="text-align:left;">
-</td>
+
 <td style="text-align:left;">
 
 Apply the Bayes’ rule to estimate the density ratio for variables in
 $\mathcal{L}$
-
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 `ratio.method.M="bayes"`
+</td>
+
+<td style="text-align:left;">
 
 </td>
-<td style="text-align:left;">
-</td>
+
 <td style="text-align:left;">
 
 Apply the Bayes’ rule to estimate the density ratio for variables
 in$\mathcal{M}$
-
 </td>
+
 </tr>
+
 <tr grouplength="2">
+
 <td colspan="3" style="border-bottom: 1px solid;">
 
 <strong>Normal distribution</strong>
-
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 `ratio.method.L="dnorm"`
-
 </td>
+
 <td style="text-align:left;">
 
 `dnorm.formula.L`
-
 </td>
+
 <td style="text-align:left;">
 
 Assuming Normal distributions to estimate the density ratio for
 variables in $\mathcal{L}$. The mean of the Normal distributions are
 estimated via fitting regressions following formula specified in
 `dnorm.formula.L`
-
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;padding-left: 2em;" indentlevel="1">
 
 `ratio.method.M="dnorm"`
-
 </td>
+
 <td style="text-align:left;">
 
 `dnorm.formula.M`
-
 </td>
+
 <td style="text-align:left;">
 
 Assuming Normal distributions to estimate the density ratio for
 variables in $\mathcal{M}$. The mean of the Normal distributions are
 estimated via fitting regressions following formula specified in
 `dnorm.formula.M`
-
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 The code below is an example of using the `dnorm` method for the density
 ratio estimation for variables in $M\backslash Y$:
 
 ``` r
-est <- ADMGtmle(a=c(1,0),
+est <- estADMG(a=c(1,0),
                 data=data_example_a, 
                 graph = graph_a,
                 treatment='A', outcome='Y',
                 ratio.method.M = "dnorm")
 ```
 
-## 4.3 The Onestep estimator
+## 3.3 The Onestep estimator
 
-To construct the Onestep estimator, the `ADMGtmle()` function estimates
+To construct the Onestep estimator, the `estADMG()` function estimates
 all the sequential regressions and density ratios discussed above. These
 nuisance estimates are then used to construct an EIF estimate as well as
 the EIF-based Onestep estimator for the target parameter. The EIF
 estimate is further used to construct the confidence interval for the
 Onestep estimator.
 
-The function `ADMGtmle()` provides Onestep estimator by default.
+The function `estADMG()` provides Onestep estimator by default.
 
-## 4.4 The TMLE
+## 3.4 The TMLE
 
 To construct TMLE, we update the estimated nuisance parameters via a
 targeting procedure such that the corresponding part of the EIF for each
 variable is sufficiently small. Sometimes, the targeting procedure
 requires iterative updates between nuisance parameters. The function
-`ADMGtmle()` provides several arguments to control for this iterative
+`estADMG()` provides several arguments to control for this iterative
 process:
 
 - `n.iter` specifys the max number of iterations for the targeting
@@ -791,13 +884,13 @@ process:
   bounds to truncate $p(A=a\mid X)$, for both $a=1$ and $a=0$. This
   helps avoid extreme values of the estimated propensity score.
 
-# 5 Output
+# 4 Output
 
-As an example, we use `ADMGtmle()` to estimate the average
-counterfactual outcome $E(Y^1)$. The output is described as follows
+As an example, we use `estADMG()` to estimate the average counterfactual
+outcome $E(Y^1)$. The output is described as follows
 
 ``` r
-est <- ADMGtmle(a=1,
+est <- estADMG(a=1,
                 data=data_example_a, 
                 graph = graph_a,
                 treatment='A', outcome='Y')
@@ -807,23 +900,23 @@ est$TMLE # a list contains the estimation result from TMLE estimator
 est$Onestep # a list contains the estimation result from Onestep estimator
 
 # For either the TMLE or Onestep estimator, the output is a list that contains the following elements:
-est$TMLE$estimated_psi # the estimated average counterfactual outcome
+est$TMLE$EYa # the estimated average counterfactual outcome
 est$TMLE$lower.ci # the lower bound of the 95% confidence interval
 est$TMLE$upper.ci # the upper bound of the 95% confidence interval
 est$TMLE$EIF # the estimated efficient influence function
-est$TMLE$EIF.Y # the estimated efficient influence function at the tangent space associated with the outcome
-est$TMLE$EIF.A # the estimated efficient influence function at the tangent space associated with the treatment
-est$TMLE$EIF.v # the estimated efficient influence function at the tangent space associated with the rest of the variables
-est$TMLE$p.a1.mpA # the estimated propensity score for treatment
-est$TMLE$mu.next.A # the estimated sequential regression associated with variable that comes right after the treatment according to the topological ordering of the ADMG
-est$TMLE$EDstar # mean of the estimated efficient influence function
-est$TMLE$iter # iterations take for TMLE estimator to converge
-est$TMLE$EDstar.record # the mean of the estimated efficient influence function at each iteration
+est$TMLE.Ya$EIF.Y # the estimated efficient influence function at the tangent space associated with the outcome
+est$TMLE.Ya$EIF.A # the estimated efficient influence function at the tangent space associated with the treatment
+est$TMLE.Ya$EIF.v # the estimated efficient influence function at the tangent space associated with the rest of the variables
+est$TMLE.Ya$p.a1.mpA # the estimated propensity score for treatment
+est$TMLE.Ya$mu.next.A # the estimated sequential regression associated with variable that comes right after the treatment according to the topological ordering of the ADMG
+est$TMLE.Ya$EDstar # mean of the estimated efficient influence function
+est$TMLE.Ya$iter # iterations take for TMLE estimator to converge
+est$TMLE.Ya$EDstar.record # the mean of the estimated efficient influence function at each iteration
 ```
 
-# 6 Functions for learning the properties of ADMG
+# 5 Functions for learning the properties of ADMG
 
-Apart from the `ADMGtmle()` for causal effec estimation, we also provide
+Apart from the `estADMG()` for causal effec estimation, we also provide
 functions for learning the properties of ADMG. The functions are
 described as follows:
 
@@ -885,12 +978,6 @@ f.descendants(graph_a, 'A')
 f.district(graph_a, 'A')
 ```
 
-- `cnt.districts`: return the number of districts in the graph.
-
-``` r
-cnt.districts(graph_a)
-```
-
 - `f.markov_blanket`: return the Markov blanket of a given vertex or
   vertices in the graph. For example, to get the Markov blanket of
   vertex `A` in the graph object for the ADMG in Figure (a), we can use
@@ -907,6 +994,15 @@ f.markov_blanket(graph_a, 'A')
 
 ``` r
 f.markov_pillow(graph_a, 'A')
+```
+
+- `is.fix`: return whether a treatment variable is fixable in a graph
+  object. For example, to check whether the treatment variable `A` is
+  fixable in the graph object for the ADMG in Figure (a), we can use the
+  following code:
+
+``` r
+is.fix(graph_a, 'A')
 ```
 
 - `is.p.fix`: return whether a treatment variable is primal fixable in a

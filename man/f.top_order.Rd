@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph-functions.R
 \name{f.top_order}
 \alias{f.top_order}
-\title{Get the topological ordering of a graph from graph object.}
+\title{Get the topological ordering of a graph from a graph object.}
 \usage{
 f.top_order(graph, treatment = NULL)
 }
@@ -16,7 +16,7 @@ If NULL, this function will rank vertices according to their input order in the 
 A vector of vertices ranked with rank from small to large.
 }
 \description{
-Function to extract the adjacency matrix from a graph object.
+Wrapper around \code{f.top_orderMAT()} that first builds the adjacency matrix from the graph.
 }
 \examples{
 graph <- make.graph(vertices=c('A','M','L','Y','X'),

@@ -10,169 +10,95 @@
 
   n <- nrow(data)
 
-  if (is.vector(a) & length(a)>2){ ## Invalid input ==
+  if (length(a) == 0) stop("`a` must be a numeric scalar or length-two vector.")
+  if (length(a) > 2)  stop("Invalid input. Enter a = c(value1, value2) for ACE estimation or a = value1 for E(Y(a)) estimation.")
 
-    print("Invalid input. Enter a=c(vaule1,value2) for average causal effect estimation: (Y(a=value1)) - E(Y(a=value2)). Enter a=value1 for average counterfactual outcome estimation at the specified treatment level value1.")
-
-  }else if (is.vector(a) & length(a)==2){ ## ATE estimate ==
-
-    ## TMLE estimator
-
-    out.a1 <- backdoor.TMLE.a(a = a[1], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
-
-                              superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                              superlearner.A = superlearner.A, # whether run superlearner for propensity score
-
-                              crossfit = crossfit, K = K,
-
-                              lib.Y = lib.Y, # superlearner library for outcome regression
-                              lib.A = lib.A, # superlearner library for propensity score
-
-                              formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                              linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                              truncate_lower = truncate_lower, truncate_upper = truncate_upper)
-
-    out.a0 <- backdoor.TMLE.a(a = a[2], data = data, vertices = vertices, di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome, multivariate.variables = multivariate.variables, graph = graph,
-
-                              superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                              superlearner.A = superlearner.A, # whether run superlearner for propensity score
-
-                              crossfit = crossfit, K = K,
-
-                              lib.Y = lib.Y, # superlearner library for outcome regression
-                              lib.A = lib.A, # superlearner library for propensity score
-
-                              formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                              linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
-
-                              truncate_lower = truncate_lower, truncate_upper = truncate_upper)
-
-    ############################ aipw ############################
-    # run aipw
-    aipw_output_Y1 <- out.a1$Onestep
-    aipw_output_Y0 <- out.a0$Onestep
-
-    # estimate E[Y(1)], E[Y(0)], and ATE
-    hat_E.Y1 = aipw_output_Y1$estimated_psi
-    hat_E.Y0 = aipw_output_Y0$estimated_psi
-    hat_ATE = hat_E.Y1 - hat_E.Y0
-
-    # lower CI
-    lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((aipw_output_Y1$EIF-aipw_output_Y0$EIF)^2)/n)
-
-    # upper CI
-    upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((aipw_output_Y1$EIF-aipw_output_Y0$EIF)^2)/n)
-
-    aipw.out <- list(ATE=hat_ATE, # estimated parameter
-                     lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                     upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                     EIF=aipw_output_Y1$EIF-aipw_output_Y0$EIF # EIF
-    )
+  # call estimation function
+  call_one <- function(a_val) {
+    backdoor.TMLE.a(a = a_val, data = data, vertices = vertices,
+                    di_edges = di_edges, bi_edges = bi_edges,
+                    treatment = treatment, outcome = outcome,
+                    multivariate.variables = multivariate.variables,
+                    graph = graph, superlearner.Y = superlearner.Y,
+                    superlearner.A = superlearner.A, crossfit = crossfit,
+                    K = K, lib.Y = lib.Y, lib.A = lib.A,
+                    formulaY = formulaY, formulaA = formulaA,
+                    linkY_binary = linkY_binary, linkA = linkA,
+                    truncate_lower = truncate_lower,
+                    truncate_upper = truncate_upper)}
 
 
-
-    ############################ tmle ############################
-    # run aipw
-    tmle_output_Y1 <- out.a1$TMLE
-    tmle_output_Y0 <- out.a0$TMLE
-
-    # estimate E[Y(1)], E[Y(0)], and ATE
-    hat_E.Y1 = tmle_output_Y1$estimated_psi
-    hat_E.Y0 = tmle_output_Y0$estimated_psi
-    hat_ATE = hat_E.Y1 - hat_E.Y0
-
-    # lower CI
-    lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((tmle_output_Y1$EIF-tmle_output_Y0$EIF)^2)/n)
-
-    # upper CI
-    upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((tmle_output_Y1$EIF-tmle_output_Y0$EIF)^2)/n)
-
-    tmle.out <- list(ATE=hat_ATE, # estimated parameter
-                     lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                     upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                     EIF=tmle_output_Y1$EIF-tmle_output_Y0$EIF # EIF
-    )
-
-
-    ############################ gcomp ############################
-    # run gcomp
-    gcomp_output_Y1 <- out.a1$gcomp
-    gcomp_output_Y0 <- out.a0$gcomp
-
-    # estimate E[Y(1)], E[Y(0)], and ATE
-    hat_E.Y1 = gcomp_output_Y1$estimated_psi
-    hat_E.Y0 = gcomp_output_Y0$estimated_psi
-    hat_ATE = hat_E.Y1 - hat_E.Y0
-
-    # # lower CI
-    # lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
-    #
-    # # upper CI
-    # upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((gcomp_output_Y1$EIF-gcomp_output_Y0$EIF)^2)/n)
-
-    gcomp.out <- list(ATE=hat_ATE, # estimated parameter
-                      # lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                      # upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                      EIF=gcomp_output_Y1$EIF-gcomp_output_Y0$EIF # EIF
-    )
-
-    ############################ ipw ############################
-    # run ipw
-    ipw_output_Y1 <- out.a1$ipw
-    ipw_output_Y0 <- out.a0$ipw
-
-    # estimate E[Y(1)], E[Y(0)], and ATE
-    hat_E.Y1 = ipw_output_Y1$estimated_psi
-    hat_E.Y0 = ipw_output_Y0$estimated_psi
-    hat_ATE = hat_E.Y1 - hat_E.Y0
-
-    # # lower CI
-    # lower.ci_ATE = hat_ATE - 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
-    #
-    # # upper CI
-    # upper.ci_ATE = hat_ATE + 1.96*sqrt(mean((ipw_output_Y1$EIF-ipw_output_Y0$EIF)^2)/n)
-
-    ipw.out <- list(ATE=hat_ATE, # estimated parameter
-                    # lower.ci=lower.ci_ATE, # lower bound of 95% CI
-                    # upper.ci=upper.ci_ATE, # upper bound of 95% CI
-                    EIF=ipw_output_Y1$EIF-ipw_output_Y0$EIF # EIF
-    )
-
-    cat(paste0("Onestep estimated ACE: ",round(aipw.out$ATE,2),"; 95% CI: (",round(aipw.out$lower.ci,2),", ",round(aipw.out$upper.ci,2),") \n",
-               "TMLE estimated ACE: ",round(tmle.out$ATE,2),"; 95% CI: (",round(tmle.out$lower.ci,2),", ",round(tmle.out$upper.ci,2),") \n",
-               "IPW estimated ACE: ",round(ipw.out$ATE,2),"; 95% CI needs to be calculated via bootstrap \n",
-               "G-comp estimated ACE: ",round(gcomp.out$ATE,2),"; 95% CI needs to be calculated via bootstrap"))
-
-    np.out <- list(TMLE=tmle.out, Onestep=aipw.out, IPW=ipw.out, Gcomp=gcomp.out,
-                   TMLE.Y1 = tmle_output_Y1, TMLE.Y0 = tmle_output_Y0,
-                   Onestep.Y1 = aipw_output_Y1, Onestep.Y0 = aipw_output_Y0,
-                   gcomp.Y1 = gcomp_output_Y1,
-                   gcomp.Y0 = gcomp_output_Y0, ipw.Y1 = ipw_output_Y1, ipw.Y0 = ipw_output_Y0)
+  # organize output
+  make_ate_out <- function(out1, out0 = NULL, has_eif = TRUE) {
+    if (is.null(out0)) {
+      if (has_eif) {
+        list(EYa     = out1$estimated_psi,
+             lower.ci = out1$lower.ci,
+             upper.ci = out1$upper.ci,
+             EIF      = out1$EIF)
+      } else {
+        list(EYa = out1$estimated_psi)
+      }
+    } else {
+      ate <- out1$estimated_psi - out0$estimated_psi
+      if (has_eif) {
+        eif <- out1$EIF - out0$EIF
+        list(ACE      = ate,
+             lower.ci = ate - 1.96 * sqrt(mean(eif^2) / n),
+             upper.ci = ate + 1.96 * sqrt(mean(eif^2) / n),
+             EIF      = eif)
+      } else {
+        list(ACE = ate)
+      }
+    }
+  }
 
 
-  }else if (length(a)==1) { ## E(Y^1) estimate ==
+    if (length(a)==2){ ## ACE estimate ==
 
-    out.a <- NPS.TMLE.a(a = a, data = data, vertices = vertices,
-                        di_edges = di_edges, bi_edges = bi_edges, treatment = treatment, outcome = outcome,
-                        multivariate.variables = multivariate.variables, graph = graph,
+      ## TMLE estimator
 
-                        superlearner.Y = superlearner.Y, # whether run superlearner for outcome regression
-                        superlearner.A = superlearner.A, # whether run superlearner for propensity score
 
-                        crossfit = crossfit, K = K,
+      out.a1 <- call_one(a[1])
+      out.a0 <- call_one(a[2])
 
-                        lib.Y = lib.Y, # superlearner library for outcome regression
-                        lib.A = lib.A, # superlearner library for propensity score
+      tmle.out  <- make_ate_out(out.a1$TMLE,    out.a0$TMLE)
+      aipw.out  <- make_ate_out(out.a1$Onestep, out.a0$Onestep)
+      gcomp.out <- make_ate_out(out.a1$gcomp,   out.a0$gcomp,  has_eif = FALSE)
+      ipw.out   <- make_ate_out(out.a1$ipw,     out.a0$ipw,    has_eif = FALSE)
 
-                        formulaY = formulaY, formulaA = formulaA, # regression formula for outcome regression and propensity score if superlearner is not used
-                        linkY_binary = linkY_binary, linkA = linkA, # link function for outcome regression and propensity score if superlearner is not used
+      message(paste0("Onestep estimated ACE: ",round(aipw.out$ACE,2),"; 95% CI: (",round(aipw.out$lower.ci,2),", ",round(aipw.out$upper.ci,2),") \n",
+                 "TMLE estimated ACE: ",round(tmle.out$ACE,2),"; 95% CI: (",round(tmle.out$lower.ci,2),", ",round(tmle.out$upper.ci,2),") \n",
+                 "IPW estimated ACE: ",round(ipw.out$ACE,2),"; 95% CI needs to be calculated via bootstrap \n",
+                 "G-comp estimated ACE: ",round(gcomp.out$ACE,2),"; 95% CI needs to be calculated via bootstrap"))
 
-                        truncate_lower = truncate_lower, truncate_upper = truncate_upper)
+      np.out <- list(TMLE=tmle.out, Onestep=aipw.out, IPW=ipw.out, Gcomp=gcomp.out,
+                     TMLE.Y1 = out.a1$TMLE, TMLE.Y0 = out.a0$TMLE,
+                     Onestep.Y1 = out.a1$Onestep, Onestep.Y0 = out.a0$Onestep,
+                     gcomp.Y1 = out.a1$gcomp, gcomp.Y0 = out.a0$gcomp,
+                     ipw.Y1 = out.a1$ipw, ipw.Y0 = out.a0$ipw)
 
-    np.out <- out.a
 
-  } # end of if else condition for testing the length of a
+    }else if (length(a)==1) { ## E(Y^1) estimate ==
+
+      out.a <- call_one(a)
+
+      tmle.out  <- make_ate_out(out.a$TMLE,    NULL, has_eif = TRUE)
+      aipw.out  <- make_ate_out(out.a$Onestep, NULL, has_eif = TRUE)
+      gcomp.out <- make_ate_out(out.a$gcomp,   NULL,  has_eif = FALSE)
+      ipw.out   <- make_ate_out(out.a$ipw,     NULL,    has_eif = FALSE)
+
+      message(paste0("Onestep estimated E(Y(a)): ",  round(aipw.out$EYa, 2),  "; 95% CI: (", round(aipw.out$lower.ci, 2),  ", ", round(aipw.out$upper.ci, 2),  ") \n",
+                 "TMLE estimated E(Y(a)): ",     round(tmle.out$EYa, 2),  "; 95% CI: (", round(tmle.out$lower.ci, 2),  ", ", round(tmle.out$upper.ci, 2),  ") \n",
+                 "IPW estimated E(Y(a)): ",      round(ipw.out$EYa, 2),   "; 95% CI needs to be calculated via bootstrap \n",
+                 "G-comp estimated E(Y(a)): ",   round(gcomp.out$EYa, 2), "; 95% CI needs to be calculated via bootstrap"))
+
+      np.out <- list(TMLE=tmle.out, Onestep=aipw.out, IPW=ipw.out, Gcomp=gcomp.out,
+                     TMLE.Ya = out.a$TMLE, Onestep.Ya = out.a$Onestep, gcomp.Ya = out.a$gcomp, ipw.Ya = out.a$ipw)
+
+    } # end of if else condition for testing the length of a
+
+
 
 
   return(np.out)

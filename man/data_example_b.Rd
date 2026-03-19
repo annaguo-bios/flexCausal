@@ -3,14 +3,17 @@
 \docType{data}
 \name{data_example_b}
 \alias{data_example_b}
-\title{This is data generated from the simulation model in Figure 4(b) of the paper "Targeted Learning of Average Causal Effects in Graphical Models with Unmeasured Variables: Extensions of the Front-Door Model".
-The model can also be found in Figure (b) of the github repository: \url{https://github.com/annaguo-bios/ADMGtmle/tree/main}}
+\title{Data generated from the simulation model in Figure 4(b) of the paper \url{https://arxiv.org/abs/2409.03962}.
+The model can also be found in Figure (b) of the github repository: \url{https://github.com/annaguo-bios/flexCausal}}
 \format{
-A data frame with 2000 rows and 6 variables: X, A, M, L, Y.
+A data frame with 2000 rows and 6 variables: X, A, U1, U2, M=(M.1,M.2), L, Y.
 \describe{
 \item{X}{a variable that follows uniform distribution at the interval of \eqn{[0,1]}}
 \item{A}{a binary treatment}
-\item{M}{a variable that contains M.1 and M.2, generated from a bivariate normal distribution}
+\item{U1}{first unmeasured confounder following a normal distribution}
+\item{U2}{second unmeasured confounder following a normal distribution}
+\item{M.1}{first component of the bivariate mediator M, following a normal distribution}
+\item{M.2}{second component of the bivariate mediator M, following a normal distribution}
 \item{L}{a variable that follows normal distribution}
 \item{Y}{a variable that follows normal distribution}
 }
@@ -19,10 +22,10 @@ A data frame with 2000 rows and 6 variables: X, A, M, L, Y.
 data_example_b
 }
 \description{
-This is data generated from the simulation model in Figure 4(b) of the paper "Targeted Learning of Average Causal Effects in Graphical Models with Unmeasured Variables: Extensions of the Front-Door Model".
-The model can also be found in Figure (b) of the github repository: \url{https://github.com/annaguo-bios/ADMGtmle/tree/main}
+Data generated from the simulation model in Figure 4(b) of the paper \url{https://arxiv.org/abs/2409.03962}.
+The model can also be found in Figure (b) of the github repository: \url{https://github.com/annaguo-bios/flexCausal}
 }
 \references{
-\url{https://github.com/annaguo-bios/ADMGtmle/tree/main}
+\url{https://github.com/annaguo-bios/flexCausal}
 }
 \keyword{data}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/graph-functions.R
 \name{f.adj_matrix}
 \alias{f.adj_matrix}
-\title{Get adjacency matrix from graph.}
+\title{Build an adjacency matrix from a graph.}
 \usage{
 f.adj_matrix(graph)
 }
@@ -13,7 +13,7 @@ f.adj_matrix(graph)
 An adjacency matrix of the graph.
 }
 \description{
-Function to perform topological sorting using Kahn's algorithm. The treatment variable is ranked with the largest order possible if there are ties.
+Construct the adjacency matrix implied by the directed edges stored in the graph object.
 }
 \examples{
 graph <- make.graph(vertices=c('A','M','L','Y','X'),

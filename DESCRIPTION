@@ -1,28 +1,43 @@
 Package: flexCausal
-Title: An R Package for Causal Effect Estimation via Doubly Robust One-Step Estimators and TMLE in Graphical Models with Unmeasured Variables
-Version: 0.0.0.9000
+Title: Causal Effect Estimation via Doubly Robust One-Step Estimators and TMLE in Graphical Models with Unmeasured Variables
+Version: 0.1.0
+Date: 2026-03-18
 Authors@R: 
     person("Anna", "Guo", 
        email = "guo.anna617@gmail.com",
        role = c("aut", "cre"),
        comment = c(GitHub = "https://github.com/annaguo-bios"))
-Description: An R package for estimating causal effects in graphical models with unmeasured variables. It implements the doubly robust onestep estimator and Targeted Maximum Likelihood Estimation (TMLE) estimator. It is able to incorporate machine learning algorithms via SuperLearner and allows sample splitting in model training.
-License: GPL (>= 3)
+Description: Provides doubly robust one-step and targeted maximum likelihood
+    (TMLE) estimators for average causal effects in acyclic directed mixed
+    graphs (ADMGs) with unmeasured variables. Automatically determines whether
+    the treatment effect is identified via backdoor adjustment or the extended
+    front-door functional, and dispatches to the appropriate estimator.
+    Supports incorporation of machine learning algorithms via 'SuperLearner'
+    and cross-fitting for nuisance estimation. Methods are described in Guo and Nabi (2024) <doi:10.48550/arXiv.2409.03962>.
+License: GPL-3
+LazyData: true
+URL: https://github.com/annaguo-bios/flexCausal
+BugReports: https://github.com/annaguo-bios/flexCausal/issues
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1.9000
+RoxygenNote: 7.3.3.9000
 Imports:
+    rlang,
     dplyr,
     SuperLearner,
     densratio,
     MASS,
-    utils,
-    mvtnorm
+    mvtnorm,
+    stats,
+    utils
 Depends: 
-    R (>= 2.10)
-LazyData: true
+    R (>= 4.1)
 Suggests: 
     knitr,
     rmarkdown,
-    flexCausal
+    testthat (>= 3.0.0),
+    earth,
+    ranger
 VignetteBuilder: knitr
+Config/testthat/edition: 3

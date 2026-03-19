@@ -3,7 +3,7 @@
 \docType{data}
 \name{data_backdoor}
 \alias{data_backdoor}
-\title{This is data generated from a classic backdoor model, where the pre-treatment variable X cause A and Y, and the treatment A cause Y.}
+\title{Data generated from a classic backdoor model, where the pre-treatment variable X cause A and Y, and the treatment A cause Y.}
 \format{
 A data frame with 2000 rows and 3 variables: X, A, Y.
 \describe{
@@ -16,9 +16,9 @@ A data frame with 2000 rows and 3 variables: X, A, Y.
 data_backdoor
 }
 \description{
-This is data generated from a classic backdoor model, where the pre-treatment variable X cause A and Y, and the treatment A cause Y.
+Data generated from a classic backdoor model, where the pre-treatment variable X cause A and Y, and the treatment A cause Y.
 }
 \references{
-\url{https://github.com/annaguo-bios/ADMGtmle/tree/main}
+\url{https://github.com/annaguo-bios/flexCausal}
 }
 \keyword{data}

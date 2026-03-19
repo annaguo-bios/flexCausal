@@ -1,0 +1,38 @@
+citHeader("To cite flexCausal in publications, please use:")
+
+citEntry(
+  entry = "Article",
+  title = "Average Causal Effect Estimation in DAGs with Hidden Variables: Extensions of Back-Door and Front-Door Criteria",
+  author = personList(
+    person("Anna", "Guo"),
+    person("Razieh", "Nabi")
+  ),
+  journal = "arXiv preprint arXiv:2409.03962",
+  year = "2024",
+  url = "http://arxiv.org/abs/2409.03962",
+  textVersion = paste(
+    "Guo, A. and Nabi, R. (2024).",
+    "Average Causal Effect Estimation in DAGs with Hidden Variables:",
+    "Extensions of Back-Door and Front-Door Criteria.",
+    "arXiv:2409.03962."
+  )
+)
+
+citEntry(
+  entry = "Article",
+  title = "Flexible Nonparametric Inference for Causal Effects under the Front-Door Model",
+  author = personList(
+    person("Anna", "Guo"),
+    person("David", "Benkeser"),
+    person("Razieh", "Nabi")
+  ),
+  journal = "arXiv preprint arXiv:2312.10234",
+  year = "2023",
+  url = "http://arxiv.org/abs/2312.10234",
+  textVersion = paste(
+    "Guo, A., Benkeser, D., and Nabi, R. (2023).",
+    "Flexible Nonparametric Inference for Causal Effects",
+    "under the Front-Door Model.",
+    "arXiv:2312.10234."
+  )
+)
