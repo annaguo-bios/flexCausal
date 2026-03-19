@@ -232,10 +232,10 @@ est <- estADMG(a=c(1,0),data=data_example_a,
 
 # 3 Details on Estimation via Onestep Estimator and TMLE
 
-<img src="pics/nuisances.jpeg" style="width:100.0%" /> The package
-constructs the EIF based **Onestep estimator** and **TMLE** for ACE
-through break down the EIF into several nuisance parameters, which falls
-into two categories: the <span style="color:deeppink">sequential
+<img src="vignettes/pics/nuisances.jpeg" style="width:100.0%" /> The
+package constructs the EIF based **Onestep estimator** and **TMLE** for
+ACE through break down the EIF into several nuisance parameters, which
+falls into two categories: the <span style="color:deeppink">sequential
 regressions</span> and <span style="color:deeppink">density
 ratios</span>. The figure above illustrates the decomposition of the EIF
 into the nuisance parameters using the ADMG in example (a) above.
