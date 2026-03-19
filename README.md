@@ -78,8 +78,8 @@ models considered in `flexCausal`.
 Here’s a schematic view of what `flexCausal` is capable of and how it
 works:
 
-![](pics/pkg.png) \# Installation To install, run the following code in
-terminal:
+![](vignettes/pics/pkg.png) \# Installation To install, run the
+following code in terminal:
 
 ``` bash
 # install the devtools package first if it's not yet installed
